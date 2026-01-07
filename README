@@ -1,3 +1,18 @@
+# 1. wine
 ```bash
 $ ./run-in-wine path/to/my.exe
+```
+
+# 2. GB stuff
+
+docs [here](https://gbdk.org/docs/api/docs_getting_started.html)
+
+## bgb
+```bash
+wget -q https://bgb.bircd.org/bgb.zip && mkdir bgb && unzip bgb.zip -d bgb && rm bgb.zip
+```
+
+## gbdk
+```bash
+wget -qO gbdk.tar.gz https://github.com/gbdk-2020/gbdk-2020/releases/download/4.5.0/gbdk-linux64.tar.gz && tar -xf gbdk.tar.gz && rm gbdk.tar.gz
 ```

@@ -45,6 +45,9 @@ RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | APT_KEY_DONT_WAR
 RUN wget -nv -O /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
     && chmod +x /usr/bin/winetricks
 
+# Install make/gcc
+RUN apt-get update && apt-get install -y build-essential
+
 # Configure locale for unicode
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
