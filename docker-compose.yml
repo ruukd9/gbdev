@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  ubuntu:
+    build:
+      context: .
+      args:
+        WWWUSER: 1000
+        WWWGROUP: 1000
+    environment:
+      - DISPLAY=${DISPLAY}
+      - USE_XVFB=TRUE
+    volumes:
+      - .:/usr/src
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ./pulse-client.conf:/root/pulse/client.conf
