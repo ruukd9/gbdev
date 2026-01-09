@@ -6,4 +6,4 @@ if [ $# -eq 0 ]
 fi
 
 echo "> running \"$@\" through wine"
-exec docker exec -ti $(basename "$PWD")-ubuntu-1 wine "$@"
+exec docker exec $(basename "$PWD")-ubuntu-1 wine "$@"

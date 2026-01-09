@@ -1,6 +1,9 @@
 #!/bin/bash
-gbdk="$PWD/gbdk"
+if [ $# -ne 1 ]
+  then
+    echo "Usage: build-folder <0_folder_name>"
+    return 1
+fi
 
-echo "building $1"
-cd "$1" && ${gbdk}/bin/lcc -Wa-l -Wl-m -Wl-j -o image.gb main.c
-echo "saved to \"$1/image.gb\""
+echo "> building ROM for folder \"$1\""
+exec docker exec $(basename "$PWD")-ubuntu-1 "./$1/build"
