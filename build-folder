@@ -1,0 +1,6 @@
+#!/bin/bash
+gbdk="$PWD/gbdk"
+
+echo "building $1"
+cd "$1" && ${gbdk}/bin/lcc -Wa-l -Wl-m -Wl-j -o image.gb main.c
+echo "saved to \"$1/image.gb\""

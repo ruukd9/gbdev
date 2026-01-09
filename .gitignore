@@ -1,2 +1,5 @@
 bgb
 gbdk
+*/*.gb
+*/*.map
+*/*.noi
