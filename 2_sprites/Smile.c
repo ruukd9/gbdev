@@ -1,8 +1,8 @@
 /*
 
- SMILE.H
+ SMILE.C
 
- Include File.
+ Tile Source File.
 
  Info:
   Form                 : All tiles as one unit.
@@ -22,14 +22,11 @@
 
 */
 
-#ifndef __smile_h_INCLUDE
-#define __smile_h_INCLUDE
-
-/* Bank of tiles. */
-#define smileBank 0
 /* Start of tile array. */
-extern const unsigned char smile[];
+const unsigned char Smile[] =
+{
+  0xFF,0x00,0xBD,0x00,0xFF,0x42,0x7E,0x81,
+  0xFF,0x00,0xFF,0x42,0xFF,0x3C,0xFF,0x00
+};
 
-#endif
-
-/* End of SMILE.H */
+/* End of SMILE.C */
