@@ -5,7 +5,7 @@ void main(){
   // set sprites as 8x8 pixels
   SPRITES_8x8;
 
-  // from tile 0 to 1 of "smile"
+  // from tile 0 load 1 tile of "smile"
   set_sprite_data(0, 1, Smile);
   // tell sprite "0" to display sprite starting from pos 0
   // since sprite size is 8x8 this loads the entire sprite 0 (tile 0)

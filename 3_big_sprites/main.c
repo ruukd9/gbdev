@@ -5,7 +5,7 @@ void main(){
   // set sprites as 8x16 pixels (max value)
   SPRITES_8x16;
 
-  // from tile 0 to 4 of "penguin"
+  // from tile 0 load 4 tiles of "penguin"
   set_sprite_data(0, 4, Penguin);
   // tell sprite "0" to display sprite staring from pos 0
   // since sprite size is 8x16 this loads sprite 0 as tiles 0 and 1 (left half)
