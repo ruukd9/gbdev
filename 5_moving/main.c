@@ -19,6 +19,12 @@
 #define PENGUIN_WALK_LEFT_1   40
 #define PENGUIN_WALK_LEFT_2   44
 
+// directions
+#define UP    0
+#define RIGHT 1
+#define DOWN  2
+#define LEFT  3
+
 // sprite memory number
 const uint8_t PENGUIN_SPRITE_NR = 0;
 
@@ -41,8 +47,9 @@ uint8_t frame = 0;
 uint8_t step_counter = 0;
 
 // btnpress watcher
-uint8_t current_btn = 0;
-uint8_t last_btn    = 0;
+uint8_t current_btn;
+uint8_t last_btn;
+uint8_t facing;
 
 // displays animation frame in current direction (current_btn) and sets the next frame
 void move_ahead(){
@@ -73,10 +80,22 @@ void move_ahead(){
 
 // shows idle sprite according to last usable position
 void show_idle(){
-  if((current_btn & J_UP)     || (last_btn & J_UP)    ) move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_UP, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
-  if((current_btn & J_DOWN)   || (last_btn & J_DOWN)  ) move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_DOWN, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
-  if((current_btn & J_LEFT)   || (last_btn & J_LEFT)  ) move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_LEFT, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
-  if((current_btn & J_RIGHT)  || (last_btn & J_RIGHT) ) move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_RIGHT, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+  if((current_btn & J_UP) || (last_btn & J_UP)){
+    move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_UP, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+    facing = UP;
+  }
+  if((current_btn & J_DOWN) || (last_btn & J_DOWN)){
+    move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_DOWN, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+    facing = DOWN;
+  }
+  if((current_btn & J_LEFT) || (last_btn & J_LEFT)){
+    move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_LEFT, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+    facing = LEFT;
+  }
+  if((current_btn & J_RIGHT) || (last_btn & J_RIGHT)){
+    move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_RIGHT, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+    facing = RIGHT;
+  }
 }
 
 void main(){
@@ -97,9 +116,16 @@ void main(){
     current_btn = joypad();
 
     if(current_btn & last_btn){
-      // is pressing same button -> start walking
+      // is pressing same button -> is walking
       step_counter++;
       if(step_counter >= 32) move_ahead();
+    }else if(((current_btn & J_UP) && facing == UP    )
+      || ((current_btn & J_DOWN)   && facing == DOWN  )
+      || ((current_btn & J_LEFT)   && facing == LEFT  )
+      || ((current_btn & J_RIGHT)  && facing == RIGHT )
+    ){
+      // just pressed after idle BUT it was already facing that direction -> one step
+      move_ahead();
     }else{
       show_idle();
     }
