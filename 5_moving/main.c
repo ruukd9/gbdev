@@ -82,18 +82,14 @@ void show_idle(){
 void main(){
   SPRITES_8x8; SHOW_SPRITES;
 
-  const uint8_t PENGUIN_SPRITE_NR = 0;
-  const metasprite_t Penguin_metasprite[] = {
-    // start(n) = n-1
-    { .dtile=0, .dx=0, .dy=0 },   // TL
-    { .dtile=1, .dx=0, .dy=8 },   // BL
-    { .dtile=2, .dx=8, .dy=-8 },  // TR
-    { .dtile=3, .dx=0, .dy=8 },   // BR
-    METASPR_TERM
-  };
+  // set sprite palette OBjectPalette0
+  OBP0_REG = DMG_PALETTE(DMG_LITE_GRAY, DMG_WHITE, DMG_DARK_GRAY, DMG_BLACK);
 
   // load all tiles for sprites
   set_sprite_data(0, 48, Penguin);
+  // show idle down sprite as default
+  move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_DOWN, 0, PENGUIN_SPRITE_NR, x_pos, y_pos);
+
 
   while(1){
     // poll joypad status
