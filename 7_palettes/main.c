@@ -1,9 +1,7 @@
-// https://laroldsretrogameyard.com/tutorials/gb/using-metasprites-in-your-gbdk-games/
-// https://github.com/gbdk-2020/gbdk-2020/blob/develop/gbdk-lib/examples/cross-platform/metasprites/src/metasprites.c
-
 #include <gb/gb.h>
 #include <gb/metasprites.h>
 #include <gb/cgb.h>
+#include <gbdk/font.h>
 #include "Penguin.h"
 #include "MapTiles.h"
 #include "IceMap.h"
@@ -28,6 +26,10 @@
 #define DOWN  2
 #define LEFT  3
 
+// since we use fonts, allocate map data after it
+// IceMap.c already has this offset baked from GBMB
+#define MAP_TILES_START 0x25
+
 // sprite memory number
 const uint8_t PENGUIN_SPRITE_NR = 0;
 // metasprite pixel size
@@ -51,7 +53,7 @@ const palette_color_t Penguin_palettes[] = {
   RGB_GREEN, RGB_WHITE, RGB(0, 12, 20), RGB_BLACK
 };
 const palette_color_t Bg_palette[] = {
-  RGB_BLACK, RGB(20, 27, 30), RGB_WHITE, RGB(0, 18, 29)
+  RGB_DARKGRAY, RGB(20, 27, 30), RGB_WHITE, RGB(0, 18, 29)
 };
 uint8_t current_palette;
 
@@ -120,8 +122,52 @@ void show_idle(){
   }
 }
 
+// flips current_palette between PALETTE_F / PALETTE_M (needs to redraw the current sprite)
+void swap_palette(){
+  current_palette = current_palette == PALETTE_F ? PALETTE_M : PALETTE_F;
+  // redraw
+  switch (facing){
+    case UP:
+      move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_UP, current_palette, PENGUIN_SPRITE_NR, x_pos, y_pos);
+      break;
+    case DOWN:
+      move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_DOWN, current_palette, PENGUIN_SPRITE_NR, x_pos, y_pos);
+      break;
+    case LEFT:
+      move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_LEFT, current_palette, PENGUIN_SPRITE_NR, x_pos, y_pos);
+      break;
+    case RIGHT:
+      move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_RIGHT, current_palette, PENGUIN_SPRITE_NR, x_pos, y_pos);
+      break;
+  }
+}
+
 void main(){
-  SPRITES_8x8; SHOW_SPRITES; SHOW_BKG;
+  SPRITES_8x8; SHOW_SPRITES; SHOW_BKG; SHOW_WIN;
+
+  // set window data (dialog)
+  // NB. this is very scuffed, possible improvents using
+  // https://laroldsretrogameyard.com/tutorials/gb/drawing-advanced-dialogue-boxes/
+  const unsigned char DialogTextMap[] = {
+    //"PRESS SELECT\nTO CHANGE COLOR"
+    // blank is at 0x00, then thers number 0-9 then letters a-z
+    // first row
+    0x1A,0x1C,0x0F,0x1D,0x1D,0x00,0x1D,0x0F,0x16,0x0F,0x0D,0x1E,
+    // 12 long -> needs 8 as padding
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    // second row
+    0x1E,0x19,0x00,0x0D,0x12,0x0B,0x18,0x11,0x0F,0x00,0x0D,0x19,0x16,0x19,0x1C,
+    // 15 long -> needs 5 as padding
+    0x00,0x00,0x00,0x00,0x00
+  };
+  // 1. load font
+  font_init();
+  font_t min_font = font_load(font_min);
+  font_set(min_font); // font is loaded from 0 to 24 in VRAM
+  // 2. set window tiles
+  set_win_tiles(0, 0, SCREENWIDTH/8, 2, DialogTextMap);
+  // 3. move to the very bottom
+  move_win(7, SCREENHEIGHT - 8*2);
 
   // set colors if supported
   // IMPORTANT !! needs -Wm-yc flag in build
@@ -136,11 +182,12 @@ void main(){
   // load all tiles for sprites
   set_sprite_data(0, 48, Penguin);
   // show idle down sprite as default
+  facing = DOWN;
   move_metasprite_ex(Penguin_metasprite, PENGUIN_IDLE_DOWN, current_palette, PENGUIN_SPRITE_NR, x_pos, y_pos);
   // load tiles for background
-  set_bkg_data(0, 2, MapTiles);
-  // show map
-  set_bkg_tiles(0, 0, IceMapWidth, IceMapHeight, IceMap);
+  set_bkg_data(MAP_TILES_START, 2, MapTiles);
+  // show map (starting AFTER font)
+  set_bkg_based_tiles(0, 0, IceMapWidth, IceMapHeight, IceMap, MAP_TILES_START);
 
 
   while(1){
@@ -149,8 +196,8 @@ void main(){
     current_btn = joypad();
 
     // palette switcher
-    if(current_btn & J_SELECT){
-      current_palette = current_palette == PALETTE_F ? PALETTE_M : PALETTE_F;
+    if(_cpu == CGB_TYPE && (current_btn & J_SELECT) && !(last_btn & J_SELECT)) {
+      swap_palette();
     }
 
     if(current_btn & last_btn){
