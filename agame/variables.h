@@ -1,0 +1,10 @@
+#define COL_HEIGHT  5
+
+#define BLOCK_WIDTH_PX     32
+#define BLOCK_WIDTH_TILES   4
+#define BLOCK_HEIGHT_PX    32
+#define BLOCK_HEIGHT_TILES  4
+
+#define SCROLL_SPEED 2
+
+#define MAP_TILES_START 0

@@ -1,0 +1,6 @@
+#!/bin/bash
+thisdir=$(dirname "$0")
+gbdk="$thisdir/../gbdk"
+
+exec find ${thisdir} -name "*.c" -exec ${gbdk}/bin/lcc -Wa-l -Wl-m -Wl-j -Wm-yc -o ${thisdir}/image.gb {} +
+echo "Done!"
