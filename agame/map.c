@@ -34,9 +34,9 @@ void generate_column_for(uint8_t target_x_tile){
       new_world_blocks_y = r_height < 64 ? 0 : 1; // 1 in 4 arbitrarily
       break;
     case 1:
-      new_world_blocks_y = r_height < 85 ? 0      // 1/3
-        : (r_height < 170 ?         1             // 1/3
-        :                           2             // 1/3
+      new_world_blocks_y = r_height < 85 ?  0      // 1/3
+        : (r_height < 170 ?                 1      // 1/3
+        :                                   2      // 1/3
       );
       break;
     case 2:
@@ -45,16 +45,16 @@ void generate_column_for(uint8_t target_x_tile){
   }
 
   uint8_t staring_tile_block_y = SCREENHEIGHT/8 - 2; // tiles
-  uint8_t solid_blocks_count  = new_world_blocks_y + 1;
+  uint8_t platform_block_height  = new_world_blocks_y + 1;
   uint8_t col_has_cloud = 0; // at most one cloud per col
   const unsigned char *block_tile;
   // get a new block for every block of the col (from the bottom)
-  // block_y is in tiles
-  for(uint8_t block_y=0; block_y<COL_HEIGHT; block_y++){
-    if(block_y < solid_blocks_count){
+  // block_i is block index in col
+  for(uint8_t block_i=0; block_i<COL_STEPS; block_i++){
+    if(block_i < platform_block_height){
       uint8_t r_block = (uint8_t)rand();
 
-      if(block_y == solid_blocks_count - 1){
+      if(block_i == platform_block_height - 1){
         // last solid one
         block_tile = r_block < 85 ? SnowBlock     // 1/3
           : (r_block < 170 ?        IceBlock      // 1/3
@@ -64,7 +64,7 @@ void generate_column_for(uint8_t target_x_tile){
         // bottomless void
         block_tile = EmptyBlock;
       }
-    }else if(block_y == solid_blocks_count){
+    }else if(block_i == platform_block_height){
       // first empty one -> fish or empty (fish around 1/4 of the time)
       block_tile = (uint8_t)rand() < 64 ? FishBlock : EmptyBlock;
     }else{
@@ -72,8 +72,8 @@ void generate_column_for(uint8_t target_x_tile){
         block_tile = EmptyBlock;
       }else{
         uint8_t r_sky = (uint8_t)rand();
-        // cloud around 50% of the time
-        if(r_sky & 1){
+        // cloud around 1/3 of the time
+        if(r_sky < 85){
           block_tile = CloudBlock;
           col_has_cloud = 1;
         }else{
@@ -82,7 +82,10 @@ void generate_column_for(uint8_t target_x_tile){
       }
     }
 
-    set_bkg_based_tiles(target_x_tile, staring_tile_block_y - block_y*BLOCK_HEIGHT_TILES, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
+    uint8_t tile_y = staring_tile_block_y - block_i*BLOCK_HEIGHT_TILES; // this is ok but overlapping is nicer looking
+    // -> we offset everything based on the new_world_blocks_y (0 -> no offset, 1 -> 3 tiles, 2 -> 6 tiles)
+    // yes this does overflow and draws at the very bottom of the buffer too but you dont see that anyway
+    set_bkg_based_tiles(target_x_tile, tile_y + new_world_blocks_y*3, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
   }
 
   world_blocks_y = new_world_blocks_y;

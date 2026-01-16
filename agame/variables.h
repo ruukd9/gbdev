@@ -1,4 +1,4 @@
-#define COL_HEIGHT  5
+#define COL_STEPS 7 // col "ticks" to trigger render of 32x32 blocks
 
 #define BLOCK_WIDTH_PX     32
 #define BLOCK_WIDTH_TILES   4
