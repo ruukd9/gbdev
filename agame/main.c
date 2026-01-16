@@ -1,7 +1,6 @@
 #include <gb/gb.h>
 #include <gb/metasprites.h>
 #include <gb/cgb.h>
-#include <rand.h>
 
 #include "variables.h"
 #include "res/bg/BGTiles.h"
@@ -24,7 +23,8 @@ void main(){
   }
 
   // setup
-  initrand(DIV_REG);
+  await_titlescreen();
+
   set_bkg_data(MAP_TILES_START, 36, BGTiles);
   set_bkg_based_tiles(0, 0, BGMapWidth, BGMapHeight, BGMap, MAP_TILES_START);
 

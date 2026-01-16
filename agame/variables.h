@@ -5,6 +5,8 @@
 #define BLOCK_HEIGHT_PX    32
 #define BLOCK_HEIGHT_TILES  4
 
+#define FONT_TILES_NB 50
+
 #define SCROLL_SPEED 2
 
 #define MAP_TILES_START 0
