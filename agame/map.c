@@ -44,14 +44,17 @@ void generate_column_for(uint8_t target_x_tile){
       break;
   }
 
-  uint8_t staring_tile_block_y = SCREENHEIGHT/8 - 2; // tiles
-  uint8_t platform_block_height  = new_world_blocks_y + 1;
-  uint8_t col_has_cloud = 0; // at most one cloud per col
-  const unsigned char *block_tile;
+  uint8_t platform_block_height  = new_world_blocks_y + 1;  // number of solid blocks in that col (or solid height of the col)
+  uint8_t col_has_cloud = 0;                                // at most one cloud per col
+  const unsigned char *block_tile;                          // kind of tile
   // get a new block for every block of the col (from the bottom)
-  // block_i is block index in col
-  for(uint8_t block_i=0; block_i<COL_STEPS; block_i++){
+  // we increase by 1 cause eventually we'll shift the whole col DOWN according to the STEP_HEIGHT (we have to guarantee to overwrite every "old" tile, so up to y=0)
+  // "1" in this case is just roof(WORLD_MAX_Y (2) * STEP_HEIGHT_TILES (2) / BLOCK_HEIGHT_TILES (4))
+  // but untill i find a clever way to make the max world level customizable (not 2) might as well just write 1
+  // is it the best way to do it? idk but its what i thought of
+  for(uint8_t block_i=0; block_i<COL_HEIGHT+1; block_i++){
     if(block_i < platform_block_height){
+      // between 0 and the solid height (1/2/3)
       uint8_t r_block = (uint8_t)rand();
 
       if(block_i == platform_block_height - 1){
@@ -61,7 +64,7 @@ void generate_column_for(uint8_t target_x_tile){
           :                         CrackedBlock  // 1/3
         );
       }else{
-        // bottomless void
+        // show "background" under the active platform
         block_tile = EmptyBlock;
       }
     }else if(block_i == platform_block_height){
@@ -82,10 +85,10 @@ void generate_column_for(uint8_t target_x_tile){
       }
     }
 
-    uint8_t tile_y = staring_tile_block_y - block_i*BLOCK_HEIGHT_TILES; // this is ok but overlapping is nicer looking
-    // -> we offset everything based on the new_world_blocks_y (0 -> no offset, 1 -> 3 tiles, 2 -> 6 tiles)
-    // yes this does overflow and draws at the very bottom of the buffer too but you dont see that anyway
-    set_bkg_based_tiles(target_x_tile, tile_y + new_world_blocks_y*3, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
+    uint8_t staring_tile_block_y = DEVICE_SCREEN_HEIGHT - 2;              // top of the first block in the col
+    uint8_t tile_y = staring_tile_block_y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
+    uint8_t y_offset = new_world_blocks_y*STEP_HEIGHT_TILES;              // offset DOWN based on the y value  (shift assembled column down X tiles)
+    set_bkg_based_tiles(target_x_tile, tile_y + y_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
   }
 
   world_blocks_y = new_world_blocks_y;
