@@ -8,7 +8,7 @@
    Section       : 
    Bank          : 0
    Map size      : 4 x 4
-   Tile set      : Z:\usr\src\demo\res\bg\bg_tiles.gbr
+   Tile set      : Z:\usr\src\agame\res\bg\bg_tiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
    Tile offset   : 0

@@ -7,7 +7,10 @@
 #include "res/bg/BGMap.h"
 
 const palette_color_t Bg_palette[] = {
-  RGB(28, 28, 31), RGB(19, 19, 25), RGB(1, 8, 13), RGB_BLACK
+  // v1
+  // RGB(28, 28, 31), RGB(19, 19, 25), RGB(1, 8, 13), RGB_BLACK
+  // v2
+  RGB(28, 31, 28), RGB(14, 18, 31), RGB(7, 11, 15), RGB(7, 7, 7)
 };
 
 void main(){
@@ -25,7 +28,7 @@ void main(){
   // setup
   await_titlescreen();
 
-  set_bkg_data(MAP_TILES_START, 36, BGTiles);
+  set_bkg_data(MAP_TILES_START, 17, BGTiles);
   set_bkg_based_tiles(0, 0, BGMapWidth, BGMapHeight, BGMap, MAP_TILES_START);
 
   uint8_t scroll_timer  = 0;

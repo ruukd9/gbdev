@@ -6,7 +6,7 @@
 #include "res/bg/CloudBlock.h"
 #include "res/bg/FishBlock.h"
 #include "res/bg/SnowBlock.h"
-#include "res/bg/IceBlock.h"
+// #include "res/bg/IceBlock.h"
 #include "res/bg/CrackedBlock.h"
 
 uint8_t world_pixels_x = 0;
@@ -62,11 +62,8 @@ void generate_column_for(uint8_t target_x_tile){
       uint8_t r_block = (uint8_t)rand();
 
       if(block_i == platform_block_height - 1){
-        // last solid one
-        block_tile = r_block < 85 ? SnowBlock     // 1/3
-          : (r_block < 170 ?        IceBlock      // 1/3
-          :                         CrackedBlock  // 1/3
-        );
+        // last solid one -> cracked or snow (cracked 1/3 of the time)
+        block_tile = r_block < 170 ? SnowBlock : CrackedBlock;
       }else{
         // show "background" under the active platform
         block_tile = EmptyBlock;
