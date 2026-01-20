@@ -2,12 +2,19 @@
 #include <rand.h>
 
 #include "variables.h"
+
+#include "res/bg/BGTiles.h"
+#include "res/bg/BGMap.h"
+#include "res/fonts/FontTiles.h"
+
 #include "res/bg/EmptyBlock.h"
 #include "res/bg/CloudBlock.h"
 #include "res/bg/FishBlock.h"
 #include "res/bg/SnowBlock.h"
-// #include "res/bg/IceBlock.h"
 #include "res/bg/CrackedBlock.h"
+
+// holds the entire map state (interesting flags like is it an enemy, what kind of block etc)
+uint8_t current_map_state[(32/BLOCK_WIDTH_TILES)*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
 
 uint8_t world_pixels_x = 0;
 uint8_t world_blocks_x = 0;
@@ -32,10 +39,10 @@ void generate_column_for(uint8_t target_x_tile){
 
   if(world_blocks_y == 0){
     // can only grow or stay the same
-    new_world_blocks_y = r_height < 64 ? 0 : 1; // 1 in 4 arbitrarily
+    new_world_blocks_y = r_height < 64 ? 0 : 1;                       // 1 in 4 arbitrarily
   }else if(world_blocks_y == WORLD_MAX_Y){
     // can only shrink or stay the same
-    new_world_blocks_y = r_height < 64 ? 1 : 2; // 1 in 4 arbitrarily
+    new_world_blocks_y = r_height < 64 ? WORLD_MAX_Y : WORLD_MAX_Y-1; // 1 in 4 arbitrarily
   }else{
     // can safely do +-1 randomly
     new_world_blocks_y = r_height < 85 ?  world_blocks_y-1  // 1/3
@@ -52,7 +59,7 @@ void generate_column_for(uint8_t target_x_tile){
   // this does mean that we potentially draw out of bounds for higher levels but its not necessarily relevant since you dont see it
   // also its easy to add an if() to not draw them if it becomes an issue
   // is it the best way to do it? idk but its what i thought of
-  uint8_t shift_offset = platform_block_height*STEP_HEIGHT_TILES;
+  uint8_t shift_offset = platform_block_height*STEP_HEIGHT_OFFSET_TILES;
   // ceiling of ratio to know how many tiles needed to cover the post-shift hole
   uint8_t height_to_cover = COL_HEIGHT + ( (shift_offset+BLOCK_HEIGHT_TILES-1)/BLOCK_HEIGHT_TILES );
   uint8_t col_has_cloud = 0; // at most one cloud per col
@@ -88,11 +95,26 @@ void generate_column_for(uint8_t target_x_tile){
 
     uint8_t staring_tile_block_y = DEVICE_SCREEN_HEIGHT - 2;              // top of the first block in the col
     uint8_t tile_y = staring_tile_block_y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
-    uint8_t y_offset = new_world_blocks_y*STEP_HEIGHT_TILES;              // offset DOWN based on the y value  (shift assembled column down X tiles)
+    uint8_t y_offset = new_world_blocks_y*STEP_HEIGHT_OFFSET_TILES;       // offset DOWN based on the y value  (shift assembled column down X tiles)
     set_bkg_based_tiles(target_x_tile, tile_y + y_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
+
+    // uint8_t x_coord = target_x_tile/4;
+    // uint8_t y_coord = block_i;
+    if      (block_tile == SnowBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = SOLID;     }
+    else if (block_tile == CrackedBlock ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = BREAKABLE; }
+    else if (block_tile == FishBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = FISH;      }
+    else                                  { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = EMPTY;     }
   }
 
   world_blocks_y = new_world_blocks_y;
+}
+
+// load initial visible map (col by col)
+void load_initial_map_fragment(){
+  set_bkg_data(MAP_TILES_START, 17, BGTiles);
+  for(uint8_t x_tile=0; x_tile<=DEVICE_SCREEN_WIDTH;x_tile+=4){ // <= so we load an extra one to buffer
+    generate_column_for(x_tile);
+  }
 }
 
 // scrolls right 1px

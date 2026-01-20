@@ -3,8 +3,6 @@
 #include <gb/cgb.h>
 
 #include "variables.h"
-#include "res/bg/BGTiles.h"
-#include "res/bg/BGMap.h"
 
 const palette_color_t Bg_palette[] = {
   // v1
@@ -27,9 +25,7 @@ void main(){
 
   // setup
   await_titlescreen();
-
-  set_bkg_data(MAP_TILES_START, 17, BGTiles);
-  set_bkg_based_tiles(0, 0, BGMapWidth, BGMapHeight, BGMap, MAP_TILES_START);
+  load_initial_map_fragment();
 
   uint8_t scroll_timer  = 0;
 

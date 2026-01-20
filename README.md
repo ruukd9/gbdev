@@ -20,6 +20,8 @@ wget -qO gbdk.tar.gz https://github.com/gbdk-2020/gbdk-2020/releases/download/4.
 ## gbtd/gbmb
 ```bash
 wget -qO gbtd_gbmb.zip https://github.com/gbdk-2020/GBTD_GBMB/releases/download/2.4.5/GBTD_GBMB_release.zip && unzip gbtd_gbmb.zip && rm gbtd_gbmb.zip
+# png conv utility
+wget -q https://github.com/bbbbbr/gimp-tilemap-gb/raw/refs/heads/master/console/bin/linux/png2gbtiles
 ```
 
 ## build folder

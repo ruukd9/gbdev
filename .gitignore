@@ -2,6 +2,7 @@ bgb
 gbdk
 GBMB
 GBTD
+png2gbtiles
 */*.gb
 */*.map
 */*.noi
