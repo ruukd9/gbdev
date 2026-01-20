@@ -1,6 +1,6 @@
 #define COL_HEIGHT                5 // 32x32 blocks in a col
 #define STEP_HEIGHT_OFFSET_TILES  2 // tile height of the overlap between two different (consecutive) height levels
-#define WORLD_MAX_Y               3 // max height of the solid blocks in a col
+#define WORLD_MAX_Y               3 // max height of the solid blocks in a col, NEEDS to be < COL_HEIGHT to make sense
 
 #define BLOCK_WIDTH_PX     32
 #define BLOCK_WIDTH_TILES   4

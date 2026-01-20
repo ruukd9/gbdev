@@ -25,7 +25,7 @@ void main(){
 
   // setup
   await_titlescreen();
-  load_initial_map_fragment();
+  init_map();
 
   uint8_t scroll_timer  = 0;
 
