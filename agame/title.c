@@ -8,6 +8,7 @@
 #include "res/bg/TitleMap.h"
 
 void await_titlescreen(){
+  SHOW_BKG;
 
   // 1. load font tiles to bkg
   set_bkg_data(0, FONT_TILES_NB, FontTiles);

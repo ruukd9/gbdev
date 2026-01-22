@@ -1,5 +1,4 @@
 #include <gb/gb.h>
-#include <gb/metasprites.h>
 #include <gb/cgb.h>
 
 #include "variables.h"
@@ -12,8 +11,6 @@ const palette_color_t Bg_palette[] = {
 };
 
 void main(){
-  SHOW_BKG;
-
   // set colors if supported
   // IMPORTANT !! needs -Wm-yc flag in build
   if(_cpu == CGB_TYPE){

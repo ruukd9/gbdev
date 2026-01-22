@@ -19,3 +19,7 @@
 #define BREAKABLE 2
 #define ENEMY     3
 #define FISH      4
+
+// aniframes
+#define ENEMY_FRAME_0 0
+#define ENEMY_FRAME_1 4
