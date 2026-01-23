@@ -3,8 +3,11 @@
 
 #include "title.h"
 #include "map.h"
+#include "animations.h"
 
-#include "variables.h"
+/* local defs */
+// how many frames for +1px?
+#define SCROLL_SPEED 2
 
 const palette_color_t Bg_palette[] = {
   // v1
@@ -26,6 +29,7 @@ void main(void){
   // setup
   await_titlescreen();
   init_map();
+  init_animations();
 
   uint8_t scroll_timer  = 0;
 
@@ -33,6 +37,7 @@ void main(void){
     scroll_timer++;
     if(scroll_timer == SCROLL_SPEED){
       update_camera();
+      animate_bg(); // TODO: maybe dont call it this fast
       scroll_timer = 0;
     }
 

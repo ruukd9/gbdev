@@ -3,11 +3,8 @@
 #include <gb/metasprites.h>
 #include <gb/cgb.h>
 
-#include "variables.h"
-
 #include "res/bg/BGTiles.h"
 #include "res/bg/BGMap.h"
-#include "res/fonts/FontTiles.h"
 
 #include "res/bg/EmptyBlock.h"
 #include "res/bg/CloudBlock.h"
@@ -15,10 +12,12 @@
 #include "res/bg/SnowBlock.h"
 #include "res/bg/CrackedBlock.h"
 
+#include "map.h"
+
 // holds the entire map state (interesting flags like is it an enemy, what kind of block etc)
-uint8_t current_map_state[(32/BLOCK_WIDTH_TILES)*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
+uint8_t current_map_state[MAP_COLS*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
 // holds the y value (ground level) for every col, always starts at 0,0 regardless of scroll
-uint8_t current_map_height[32/BLOCK_WIDTH_TILES] = {0};
+uint8_t current_map_height[MAP_COLS] = {0};
 
 // creates and draws a new column on the map
 // also updates current_map_state
@@ -45,17 +44,16 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
   }
 
   const unsigned char *block_tile; // kind of tile
-  const uint8_t staring_tile_block_y = DEVICE_SCREEN_HEIGHT - STEP_HEIGHT_OFFSET_TILES; // top of the first block in the col
-  const uint8_t platform_block_height  = new_world_blocks_y + 1;  // number of solid blocks in that col (or solid height of the col)
+  uint8_t platform_block_height  = new_world_blocks_y + 1;  // number of solid blocks in that col (or solid height of the col)
   // get a new block for every block of the col (from the bottom)
   // we have to go for more than COL_HEIGHT (based on WORLD_MAX_Y)
   // cause eventually we'll shift the whole col DOWN according to the STEP_HEIGHT and new_world_blocks_y (we have to guarantee to overwrite every "old" tile)
   // this does mean that we potentially draw out of bounds for higher levels but its not necessarily relevant since you dont see it
   // also its easy to add an if() to not draw them if it becomes an issue
   // is it the best way to do it? idk but its what i thought of
-  const uint8_t shift_offset = platform_block_height*STEP_HEIGHT_OFFSET_TILES;
+  uint8_t shift_offset = platform_block_height*STEP_HEIGHT_OFFSET_TILES;
   // ceiling of ratio offset/tilesH to know how many tiles needed to cover the post-shift hole
-  const uint8_t height_to_cover = COL_HEIGHT + ( (shift_offset+BLOCK_HEIGHT_TILES-1)/BLOCK_HEIGHT_TILES );
+  uint8_t height_to_cover = COL_HEIGHT + ( (shift_offset+BLOCK_HEIGHT_TILES-1)/BLOCK_HEIGHT_TILES );
   uint8_t col_has_cloud = 0; // at most one cloud per col
   for(uint8_t block_i=0; block_i<height_to_cover; block_i++){
     if(block_i < platform_block_height){
@@ -87,17 +85,17 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
       }
     }
 
-    uint8_t tile_y = staring_tile_block_y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
+    uint8_t tile_y = STARING_TILE_BLOCK_Y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
     uint8_t y_offset = new_world_blocks_y*STEP_HEIGHT_OFFSET_TILES;       // offset DOWN based on the y value  (shift assembled column down X tiles)
     set_bkg_based_tiles(target_x_tile, tile_y + y_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
 
     // update current map state with the new col
     // x_coord = target_x_tile/BLOCK_WIDTH_TILES
     // y_coord = block_i
-    if      (block_tile == SnowBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = SOLID;     }
-    else if (block_tile == CrackedBlock ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = BREAKABLE; }
-    else if (block_tile == FishBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = FISH;      }
-    else                                  { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = EMPTY;     }
+    if      (block_tile == SnowBlock    ) { current_map_state[block_i*MAP_ROWS + (target_x_tile/BLOCK_WIDTH_TILES)] = SOLID;     }
+    else if (block_tile == CrackedBlock ) { current_map_state[block_i*MAP_ROWS + (target_x_tile/BLOCK_WIDTH_TILES)] = BREAKABLE; }
+    else if (block_tile == FishBlock    ) { current_map_state[block_i*MAP_ROWS + (target_x_tile/BLOCK_WIDTH_TILES)] = FISH;      }
+    else                                  { current_map_state[block_i*MAP_ROWS + (target_x_tile/BLOCK_WIDTH_TILES)] = EMPTY;     }
   }
 
   // update height for col

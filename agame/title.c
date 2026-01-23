@@ -3,9 +3,10 @@
 #include <rand.h>
 #include <gbdk/font.h>
 
-#include "variables.h"
 #include "res/fonts/FontTiles.h"
 #include "res/bg/TitleMap.h"
+
+#include "title.h"
 
 void await_titlescreen(void){
   SHOW_BKG;
