@@ -3,13 +3,11 @@
 #include <gb/metasprites.h>
 #include <gb/cgb.h>
 
-
 #include "variables.h"
 
 #include "res/bg/BGTiles.h"
 #include "res/bg/BGMap.h"
 #include "res/fonts/FontTiles.h"
-#include "res/sprites/Postman.h"
 
 #include "res/bg/EmptyBlock.h"
 #include "res/bg/CloudBlock.h"
@@ -17,101 +15,32 @@
 #include "res/bg/SnowBlock.h"
 #include "res/bg/CrackedBlock.h"
 
-typedef struct map_position_t {
-  int16_t x_px; int16_t y_px;
-  uint8_t frame;
-} map_position_t;
-
 // holds the entire map state (interesting flags like is it an enemy, what kind of block etc)
 uint8_t current_map_state[(32/BLOCK_WIDTH_TILES)*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
-
-uint8_t world_is_inited = 0;
-
-// current (last generated) world coordinates
-uint8_t world_pixels_x = 0;
-uint8_t world_blocks_x = 0;
-uint8_t world_pixels_y = 0;
-uint8_t world_blocks_y = 0;
-
-uint8_t world_has_enemy = 0;
-const uint8_t ENEMY_SPRITE_NR = 0;
-const uint8_t PALETTE_ENEMY = OAMF_CGB_PAL0;
-const palette_color_t Enemy_palette[] = {
-  RGB_WHITE, RGB(30, 26, 11), RGB(10, 15, 24), RGB(7, 7, 7)
-};
-const metasprite_t Enemy_metasprite[] = {
-  // reference is the origin -> we wanna place it at (W/2,H) aka where he stands
-  // so top left corner is at x=-8, y=-16
-  // also start(n) = n-1
-  { .dtile=0, .dx=-8, .dy=-16 },  // L
-  { .dtile=2, .dx=8,  .dy=0   },  // R
-  METASPR_TERM
-};
-map_position_t Enemy_position = {
-  // out of bounds init
-  .x_px=-BLOCK_WIDTH_PX, .y_px=-BLOCK_HEIGHT_PX,
-  .frame=ENEMY_FRAME_0
-};
-
-// B0 -> target_tile = 24
-// B1 -> target_tile = 28
-// B2 -> target_tile =  0
-// B3 -> target_tile =  4
-// B4 -> target_tile =  8
-// B5 -> target_tile = 12
-// B6 -> target_tile = 16
-// B7 -> target_tile = 20
-uint8_t next_target_tile(){
-  // its not just +SCREEN bc at the start we generate one block more, so we have to generate the next next block
-  return (uint8_t)(world_blocks_x*BLOCK_WIDTH_TILES + (DEVICE_SCREEN_WIDTH+BLOCK_WIDTH_TILES)) & 31; // == x % 32
-}
-
-// retruns whether or not is possible to have an enemy on the screen
-uint8_t can_spawn_enemy(){
-  // only possible if theres no other enemy on the map (would hit sprite limit) and we are not on the initial load (prevents headaches)
-  return !world_has_enemy && world_is_inited;
-}
-
-// draws enemy sprite on screen and updates world enemy flag
-// @param x_px pixels coordinate on the x axis
-// @param y_px pixels coordinate on the y axis
-void spawn_enemy_at(uint8_t x_px, uint8_t y_px){
-  move_metasprite_ex(Enemy_metasprite, Enemy_position.frame, PALETTE_ENEMY, ENEMY_SPRITE_NR, x_px, y_px);
-  Enemy_position.x_px = x_px;
-  Enemy_position.y_px = y_px;
-  Enemy_position.frame = (SCX_REG & 4) == 0 ? ENEMY_FRAME_0 : ENEMY_FRAME_1;
-  // update world status
-  world_has_enemy = 1;
-}
-
-void update_enemy(){
-  if(world_has_enemy){
-    Enemy_position.x_px--;
-    move_metasprite_ex(Enemy_metasprite, Enemy_position.frame, PALETTE_ENEMY, ENEMY_SPRITE_NR, Enemy_position.x_px, Enemy_position.y_px);
-
-    Enemy_position.frame = (SCX_REG & 4) == 0 ? ENEMY_FRAME_0 : ENEMY_FRAME_1;
-  }
-}
+// holds the y value (ground level) for every col, always starts at 0,0 regardless of scroll
+uint8_t current_map_height[32/BLOCK_WIDTH_TILES] = {0};
 
 // creates and draws a new column on the map
 // also updates current_map_state
 // @param target_x_tiles tile reference on the x axis of the column to generate
-void generate_column_for(uint8_t target_x_tile){
-  // calc new world_blocks_y from current
-  uint8_t new_world_blocks_y = 1; // default 1 as fallback in case something is wrong
+// @param previous_col_world_y height of the previous column (to make the next one consistent and reachable)
+// @returns the height of the newly generated column
+static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_world_y){
+  // calc new col world_blocks_y from current
+  uint8_t new_world_blocks_y = previous_col_world_y; // default as fallback in case something is wrong
   uint8_t r_height = (uint8_t)rand();
 
-  if(world_blocks_y == 0){
+  if(previous_col_world_y == 0){
     // can only grow or stay the same
     new_world_blocks_y = r_height < 64 ? 0 : 1;                       // 1 in 4 arbitrarily
-  }else if(world_blocks_y == WORLD_MAX_Y){
+  }else if(previous_col_world_y == WORLD_MAX_Y){
     // can only shrink or stay the same
     new_world_blocks_y = r_height < 64 ? WORLD_MAX_Y : WORLD_MAX_Y-1; // 1 in 4 arbitrarily
   }else{
     // can safely do +-1 randomly
-    new_world_blocks_y = r_height < 85 ?  world_blocks_y-1  // 1/3
-      : (r_height < 170 ?                 world_blocks_y    // 1/3
-      :                                   world_blocks_y+1  // 1/3
+    new_world_blocks_y = r_height < 85 ?  previous_col_world_y-1      // 1/3
+      : (r_height < 170 ?                 previous_col_world_y        // 1/3
+      :                                   previous_col_world_y+1      // 1/3
     );
   }
 
@@ -163,60 +92,49 @@ void generate_column_for(uint8_t target_x_tile){
     set_bkg_based_tiles(target_x_tile, tile_y + y_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
 
     // update current map state with the new col
-    // x_coord = target_x_tile/4
+    // x_coord = target_x_tile/BLOCK_WIDTH_TILES
     // y_coord = block_i
-    if      (block_tile == SnowBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = SOLID;     }
-    else if (block_tile == CrackedBlock ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = BREAKABLE; }
-    else if (block_tile == FishBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = FISH;      }
-    else{
-      // block_tile == EmptyBlock
-      if(block_i == platform_block_height && can_spawn_enemy()){ // maybe add some randomness to this?
-        // this uses move_metasprite_x so the x,y need to be the ORIGIN of the sprite (NOT top left)
-        spawn_enemy_at(target_x_tile*8 -8, (tile_y + y_offset)*8 + 32 + 16);
-        current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = ENEMY;
-        delay(5000);
-      }else{
-        current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/4)] = EMPTY;
-      }
-    }
+    if      (block_tile == SnowBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = SOLID;     }
+    else if (block_tile == CrackedBlock ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = BREAKABLE; }
+    else if (block_tile == FishBlock    ) { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = FISH;      }
+    else                                  { current_map_state[block_i*(32/BLOCK_HEIGHT_TILES) + (target_x_tile/BLOCK_WIDTH_TILES)] = EMPTY;     }
   }
-  world_blocks_y = new_world_blocks_y;
+
+  // update height for col
+  current_map_height[target_x_tile/BLOCK_WIDTH_TILES] = new_world_blocks_y;
+
+  return new_world_blocks_y;
 }
 
 // initializes world_height
 // load initial visible map (col by col)
 // which in turns also inits the current map state with the visible columns (+1)
 // also loads enemy sprite data
-void init_map(){
-  world_is_inited = 0;
-
-  /* sprites stuff */
-  SPRITES_8x16; SHOW_SPRITES;
-  if(_cpu == CGB_TYPE) set_sprite_palette(0, 1, Enemy_palette);
-  set_sprite_data(ENEMY_SPRITE_NR, 8, Postman);
-
+void init_map(void){
   /* bkg stuff */
   SHOW_BKG;
-  world_blocks_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
+  uint8_t previous_col_world_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
   set_bkg_data(MAP_TILES_START, 17, BGTiles);
   for(uint8_t x_tile=0; x_tile<=DEVICE_SCREEN_WIDTH;x_tile+=4){ // <= so we load an extra one to buffer
-    generate_column_for(x_tile);
+    previous_col_world_y = generate_column_for(x_tile, previous_col_world_y);
   }
-
-  world_is_inited = 1;
 }
 
 // scrolls everything right 1px
 // also generates next column of the map if necessary
-void update_camera(){
-  scroll_bkg(1, 0);
-  world_pixels_x++;
-  if(world_pixels_x == BLOCK_WIDTH_PX){
+void update_camera(void){
+  scroll_bkg(1, 0); // SCX_REG++
+  if((SCX_REG & (BLOCK_WIDTH_PX-1)) == 0){ // % 32
     // travelled 1 block -> generate first out of bounds (next appearing)
-    generate_column_for(next_target_tile());
-    world_blocks_x = (world_blocks_x+1) & 31;
-    world_pixels_x = 0;
-  }
+    // SCX_REG is the leftmost pixel on screen, goes from 0->255
+    // so we convert in block coords
+    // its the previous so we do -blockW
+    uint8_t last_col_x_coord = ((SCX_REG + SCREENWIDTH - BLOCK_WIDTH_PX)/BLOCK_WIDTH_PX) & 7; // % 8 == size of the array for wraparound
+    // get last used height
+    uint8_t last_col_world_y = current_map_height[last_col_x_coord];
+    // target the next tile to show the col at
+    uint8_t next_target_tile = ((SCX_REG/8) + DEVICE_SCREEN_WIDTH) & (DEVICE_SCREEN_BUFFER_WIDTH-1);
 
-  update_enemy();
+    generate_column_for(next_target_tile, last_col_world_y);
+  }
 }

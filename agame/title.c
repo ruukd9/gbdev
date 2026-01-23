@@ -7,7 +7,7 @@
 #include "res/fonts/FontTiles.h"
 #include "res/bg/TitleMap.h"
 
-void await_titlescreen(){
+void await_titlescreen(void){
   SHOW_BKG;
 
   // 1. load font tiles to bkg

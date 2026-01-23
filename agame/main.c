@@ -1,6 +1,9 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
 
+#include "title.h"
+#include "map.h"
+
 #include "variables.h"
 
 const palette_color_t Bg_palette[] = {
@@ -10,7 +13,7 @@ const palette_color_t Bg_palette[] = {
   RGB(28, 31, 28), RGB(14, 18, 31), RGB(7, 11, 15), RGB(7, 7, 7)
 };
 
-void main(){
+void main(void){
   // set colors if supported
   // IMPORTANT !! needs -Wm-yc flag in build
   if(_cpu == CGB_TYPE){
