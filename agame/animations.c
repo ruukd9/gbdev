@@ -2,6 +2,7 @@
 #include <gb/metasprites.h>
 
 #include "map.h"
+#include "utils.h"
 
 #include "res/bg/FishBlock.h"
 
@@ -20,8 +21,8 @@
 #define ANIMATE_LEFT  3
 #define ANIMATE_RIGHT 4
 
-uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
-uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // index of animation, one frame per fish, max COL fishes (recycled)
+const uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
+uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // current index of animation, one frame per fish, max COL fishes (recycled)
 
 void animate_bg(void){
   /* FISHES */
@@ -39,8 +40,8 @@ void animate_bg(void){
         uint8_t fish_top_left_y = tile_y + y_offset;
         uint8_t fish_top_left_x = block_x*BLOCK_WIDTH_TILES;
 
-        uint8_t current_ani_frame_idx = fish_ani_frame_idx[block_x];
-        uint8_t current_ani_step = fish_ani_steps[current_ani_frame_idx];
+        uint8_t current_ani_frame_idx = fish_ani_frame_idx[block_x]; // 0,1,2,3
+        uint8_t current_ani_step = fish_ani_steps[current_ani_frame_idx]; // ANIMATE_NONE, ANIMATE_UP, ANIMATE_DOWN
 
         switch (current_ani_step){
           case ANIMATE_UP:
@@ -52,7 +53,6 @@ void animate_bg(void){
             // mask bottom with empty
             set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
-            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
             break;
           case ANIMATE_DOWN:
             // draw fish at the bottom
@@ -63,8 +63,6 @@ void animate_bg(void){
             // mask top with empty
             set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
-            // set next frame
-            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
             break;
           case ANIMATE_NONE:
           default:
@@ -78,10 +76,11 @@ void animate_bg(void){
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y, FishBlock[FISH_TILE_EMPTY]);
             set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
-            // set next frame
-            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
             break;
         }
+
+        // set next frame
+        fish_ani_frame_idx[block_x] = current_ani_frame_idx+1 < LEN(fish_ani_steps) ? (current_ani_frame_idx+1) : 0;
       }
     }
   }
