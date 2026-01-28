@@ -13,17 +13,19 @@
 #define FISH_TILE_BR    10
 // empty block to cover previous tiles (we'll get it from FishBlock too)
 #define FISH_TILE_EMPTY  0
-// animation direction
+// animation direction / position in a 4x4 tiles block
 #define ANIMATE_NONE  0
 #define ANIMATE_UP    1
 #define ANIMATE_DOWN  2
 #define ANIMATE_LEFT  3
 #define ANIMATE_RIGHT 4
 
-uint8_t fish_ani_dir; // TODO: make this an array to handle different fishes differently
+uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
+uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // index of animation, one frame per fish, max COL fishes (recycled)
 
 void animate_bg(void){
   /* FISHES */
+  // (this might be very heavy when added with everything else, we'll see)
   uint8_t start_block_x     = 0;
   uint8_t last_block_x      = MAP_COLS;
   uint8_t min_fish_block_y  = 1; // at least sitting on a level 0
@@ -37,8 +39,35 @@ void animate_bg(void){
         uint8_t fish_top_left_y = tile_y + y_offset;
         uint8_t fish_top_left_x = block_x*BLOCK_WIDTH_TILES;
 
-        switch (fish_ani_dir){
+        uint8_t current_ani_frame_idx = fish_ani_frame_idx[block_x];
+        uint8_t current_ani_step = fish_ani_steps[current_ani_frame_idx];
+
+        switch (current_ani_step){
+          case ANIMATE_UP:
+            // draw fish at the top
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y, FishBlock[FISH_TILE_TL]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y, FishBlock[FISH_TILE_TR]);
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_BL]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_BR]);
+            // mask bottom with empty
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
+            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
+            break;
+          case ANIMATE_DOWN:
+            // draw fish at the bottom
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_TL]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_TR]);
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+3, FishBlock[FISH_TILE_BL]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+3, FishBlock[FISH_TILE_BR]);
+            // mask top with empty
+            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
+            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
+            // set next frame
+            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
+            break;
           case ANIMATE_NONE:
+          default:
             // draw fish in the middle
             set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_TL]);
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_TR]);
@@ -50,26 +79,10 @@ void animate_bg(void){
             set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
             set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
             // set next frame
-            fish_ani_dir = ANIMATE_UP;
-            break;
-          case ANIMATE_UP:
-            // draw fish at the top
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y, FishBlock[FISH_TILE_TL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y, FishBlock[FISH_TILE_TR]);
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_BL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_BR]);
-            // mask bottom with empty
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
-            fish_ani_dir = ANIMATE_NONE;
-          default:
+            fish_ani_frame_idx[block_x] = (current_ani_frame_idx+1) & 3;
             break;
         }
       }
     }
   }
-}
-
-void init_animations(void){
-  fish_ani_dir = ANIMATE_NONE;
 }

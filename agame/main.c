@@ -29,7 +29,6 @@ void main(void){
   // setup
   await_titlescreen();
   init_map();
-  init_animations();
 
   uint8_t scroll_timer  = 0;
 
@@ -37,8 +36,12 @@ void main(void){
     scroll_timer++;
     if(scroll_timer == SCROLL_SPEED){
       update_camera();
-      animate_bg(); // TODO: maybe dont call it this fast
       scroll_timer = 0;
+    }
+
+    // animate bg tiles (fish and stuff)
+    if((SCX_REG & (BLOCK_WIDTH_PX-1)) == 0){
+      animate_bg();
     }
 
     wait_vbl_done();
