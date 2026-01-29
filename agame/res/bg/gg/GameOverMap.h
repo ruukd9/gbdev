@@ -7,7 +7,7 @@
  Info:
    Section       : 
    Bank          : 0
-   Map size      : 12 x 5
+   Map size      : 20 x 18
    Tile set      : game_over_tiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
@@ -20,8 +20,8 @@
 #ifndef __GameOverMap_h_INCLUDE
 #define __GameOverMap_h_INCLUDE
 
-#define GameOverMapWidth 12
-#define GameOverMapHeight 5
+#define GameOverMapWidth 20
+#define GameOverMapHeight 18
 #define GameOverMapBank 0
 
 extern const unsigned char GameOverMap[];

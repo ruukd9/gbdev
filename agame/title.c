@@ -1,26 +1,29 @@
 #include <stdio.h>
 #include <gb/gb.h>
-#include <rand.h>
 
 #include "res/bg/title/TitleTiles.h"
 #include "res/bg/title/TitleMap.h"
+#include "res/bg/gg/GameOverTiles.h"
+#include "res/bg/gg/GameOverMap.h"
 
 #include "title.h"
 
-void await_titlescreen(void){
+void show_titlescreen(void){
   SHOW_BKG;
 
-  // 1. load font tiles to bkg
+  // load title tiles to bkg
   set_bkg_data(0, 16, TitleTiles);
   set_bkg_tiles(0, 0, TitleMapWidth, TitleMapHeight, TitleMap);
 
-  // 2. rand seed
-  // https://github.com/gbdk-2020/gbdk-2020/blob/develop/gbdk-lib/examples/gb/rand/src/rand.c
-  uint16_t seed;
-  waitpad(J_START);
-  seed = DIV_REG;
-  waitpadup();
-  seed |= (UWORD)DIV_REG << 8;
+  // ... maybe some animation in the future
+}
 
-  initrand(seed);
+void show_endscreen(void){
+  SHOW_BKG;
+
+  // load ending tiles to bkg
+  set_bkg_data(0, 18, GameOverTiles);
+  set_bkg_tiles(0, 0, GameOverMapWidth, GameOverMapHeight, GameOverMap);
+
+  // ... maybe some recap/score in the future
 }

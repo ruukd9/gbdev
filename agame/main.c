@@ -1,17 +1,18 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
+#include <rand.h>
 
 #include "title.h"
 #include "map.h"
 #include "animations.h"
 #include "pino.h"
 
-#include "res/bg/gg/GameOverTiles.h"
-#include "res/bg/gg/GameOverMap.h"
-
 /* local defs */
 // how many frames for +1px?
 #define SCROLL_SPEED 2
+
+static void await_start(void);
+static void game_loop(void);
 
 const palette_color_t Bg_palette[] = {
   // v1
@@ -21,14 +22,6 @@ const palette_color_t Bg_palette[] = {
   // v3
   RGB_WHITE, RGB(11, 24, 31), RGB(5, 8, 31), RGB(3, 3, 3)
 };
-
-// shows the gg screen
-static void gg(void){
-  SHOW_WIN;
-
-  set_win_data(17, 18, GameOverTiles);
-  set_win_based_tiles(4, DEVICE_SCREEN_HEIGHT - GameOverMapHeight - 1, GameOverMapWidth, GameOverMapHeight, GameOverMap, 17);
-}
 
 void main(void){
   // set colors if supported
@@ -41,8 +34,27 @@ void main(void){
     OBP0_REG = DMG_PALETTE(DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY, DMG_BLACK);
   }
 
+  show_titlescreen();
+  // wait for start to begin
+  await_start();
+}
+
+// inits the random seed and then starts the main game loop
+static void await_start(void){
+  // init rand seed
+  // https://github.com/gbdk-2020/gbdk-2020/blob/develop/gbdk-lib/examples/gb/rand/src/rand.c
+  uint16_t seed;
+  waitpad(J_START);
+  seed = DIV_REG;
+  waitpadup();
+  seed |= (UWORD)DIV_REG << 8;
+  initrand(seed);
+
+  game_loop();
+}
+
+static void game_loop(void){
   // setup
-  await_titlescreen();
   init_map();
   init_pino();
 
@@ -60,8 +72,15 @@ void main(void){
       scroll_timer = 0;
     }
 
-    if(update_pino()){ gg(); break; }
+    if(update_pino()) break;
 
     vsync();
   }
+
+  // reset camera
+  SCX_REG = 0;
+
+  show_endscreen();
+  // wait for start press to go again
+  await_start();
 }
