@@ -6,8 +6,8 @@
 #include "animations.h"
 #include "pino.h"
 
-#include "res/fonts/FontTiles.h"
-#include "res/bg/GGMap.h"
+#include "res/bg/GameOverTiles.h"
+#include "res/bg/GameOverMap.h"
 
 /* local defs */
 // how many frames for +1px?
@@ -26,8 +26,8 @@ const palette_color_t Bg_palette[] = {
 static void gg(void){
   SHOW_WIN;
 
-  set_win_data(17, FONT_TILES_NB, FontTiles);
-  set_win_based_tiles(5, DEVICE_SCREEN_HEIGHT - GGMapHeight - 1, GGMapWidth, GGMapHeight, GGMap, 17);
+  set_win_data(17, 18, GameOverTiles);
+  set_win_based_tiles(4, DEVICE_SCREEN_HEIGHT - GameOverMapHeight - 1, GameOverMapWidth, GameOverMapHeight, GameOverMap, 17);
 }
 
 void main(void){
