@@ -3,14 +3,14 @@
 #include <gb/metasprites.h>
 #include <gb/cgb.h>
 
-#include "res/bg/BGTiles.h"
-#include "res/bg/BGMap.h"
+#include "res/bg/map/BGTiles.h"
+#include "res/bg/map/BGMap.h"
 
-#include "res/bg/EmptyBlock.h"
-#include "res/bg/CloudBlock.h"
-#include "res/bg/FishBlock.h"
-#include "res/bg/SnowBlock.h"
-#include "res/bg/CrackedBlock.h"
+#include "res/bg/map/EmptyBlock.h"
+#include "res/bg/map/CloudBlock.h"
+#include "res/bg/map/FishBlock.h"
+#include "res/bg/map/SnowBlock.h"
+#include "res/bg/map/CrackedBlock.h"
 
 #include "map.h"
 

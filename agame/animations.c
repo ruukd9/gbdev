@@ -4,7 +4,7 @@
 #include "map.h"
 #include "utils.h"
 
-#include "res/bg/FishBlock.h"
+#include "res/bg/map/FishBlock.h"
 
 /* local defs */
 // fish animate-able tiles index in FishBlock (inner 2x2 of a 4x4 block)

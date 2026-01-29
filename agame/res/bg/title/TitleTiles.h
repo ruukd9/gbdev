@@ -1,6 +1,6 @@
 /*
 
- FONTTILES.H
+ TITLETILES.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 68
+  Tiles                : 0 to 15
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -22,14 +22,14 @@
 
 */
 
-#ifndef __FontTiles_h_INCLUDE
-#define __FontTiles_h_INCLUDE
+#ifndef __TitleTiles_h_INCLUDE
+#define __TitleTiles_h_INCLUDE
 
 /* Bank of tiles. */
-#define FontTilesBank 0
+#define TitleTilesBank 0
 /* Start of tile array. */
-extern const unsigned char FontTiles[];
+extern const unsigned char TitleTiles[];
 
 #endif
 
-/* End of FONTTILES.H */
+/* End of TITLETILES.H */

@@ -6,8 +6,8 @@
 #include "animations.h"
 #include "pino.h"
 
-#include "res/bg/GameOverTiles.h"
-#include "res/bg/GameOverMap.h"
+#include "res/bg/gg/GameOverTiles.h"
+#include "res/bg/gg/GameOverMap.h"
 
 /* local defs */
 // how many frames for +1px?
