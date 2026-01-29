@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <gb/gb.h>
 #include <rand.h>
-#include <gbdk/font.h>
 
 #include "res/fonts/FontTiles.h"
 #include "res/bg/TitleMap.h"

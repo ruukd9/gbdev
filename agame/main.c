@@ -4,6 +4,10 @@
 #include "title.h"
 #include "map.h"
 #include "animations.h"
+#include "pino.h"
+
+#include "res/fonts/FontTiles.h"
+#include "res/bg/GGMap.h"
 
 /* local defs */
 // how many frames for +1px?
@@ -18,11 +22,20 @@ const palette_color_t Bg_palette[] = {
   RGB_WHITE, RGB(11, 24, 31), RGB(5, 8, 31), RGB(3, 3, 3)
 };
 
+// shows the gg screen
+static void gg(void){
+  SHOW_WIN;
+
+  set_win_data(17, FONT_TILES_NB, FontTiles);
+  set_win_based_tiles(5, DEVICE_SCREEN_HEIGHT - GGMapHeight - 1, GGMapWidth, GGMapHeight, GGMap, 17);
+}
+
 void main(void){
   // set colors if supported
   // IMPORTANT !! needs -Wm-yc flag in build
   if(_cpu == CGB_TYPE){
     set_bkg_palette(0, 1, Bg_palette);
+    set_sprite_palette(0, 1, Pino_palette);
   }else{
     // set DMG palette
     OBP0_REG = DMG_PALETTE(DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY, DMG_BLACK);
@@ -31,6 +44,7 @@ void main(void){
   // setup
   await_titlescreen();
   init_map();
+  init_pino();
 
   uint8_t scroll_timer  = 0;
 
@@ -45,6 +59,8 @@ void main(void){
 
       scroll_timer = 0;
     }
+
+    if(update_pino()){ gg(); break; }
 
     vsync();
   }
