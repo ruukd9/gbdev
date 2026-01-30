@@ -79,6 +79,8 @@ static void game_loop(void){
 
   // reset camera
   SCX_REG = 0;
+  // remove sprites
+  HIDE_SPRITES;
 
   show_endscreen();
   // wait for start press to go again

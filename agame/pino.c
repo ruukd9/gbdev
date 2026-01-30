@@ -10,6 +10,8 @@
 /* local defs */
 // sprite number
 #define PINO_SPRITE_NR 0
+#define SCREEN_BUFFER_PX (DEVICE_SCREEN_BUFFER_WIDTH*8)
+
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
 const palette_color_t Pino_palette[] = {
@@ -27,37 +29,57 @@ const metasprite_t Pino_metasprite[] = {
   { .dtile=14,  .dx=8,  .dy=0 },    // BR
   METASPR_TERM
 };
-// curren block x position (0->7)
-uint8_t pino_x_position;
+
+uint8_t pino_block_x_position; // current block x position (0->7)
+uint8_t pino_tile_y_position;  // this is in tiles cause height calculations is done in tiles
 // i have no clue why but the metasprite is drawn with 0,0 in these coordinates
-const int8_t sprite_draw_tiles_offset[] = { -1, -2 };
+const int8_t sprite_draw_px_offset[] = { -DEVICE_SPRITE_PX_OFFSET_X, -DEVICE_SPRITE_PX_OFFSET_Y };
+
+// detect button presses
+uint8_t current_btn;
+uint8_t last_btn;
 
 // draws pino at his currently saved x position
 static void draw_pino(void){
-  uint8_t pino_pos_height = current_map_height[pino_x_position]; // level height of the block
+  uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
   uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
-  uint8_t pino_block_y_pos = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES;
+  pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
   set_sprite_data(0, 16, Pino);
   move_metasprite_ex(
     Pino_metasprite,
     0, PINO_PAL, PINO_SPRITE_NR,
-    (pino_x_position - sprite_draw_tiles_offset[0])*8 - SCX_REG, // -SCX cause we want him still in the world frame
-    (pino_block_y_pos - sprite_draw_tiles_offset[1])*8
+    pino_block_x_position*BLOCK_WIDTH_PX - sprite_draw_px_offset[0] - SCX_REG, // -SCX cause we want him still in the world frame
+    pino_tile_y_position*8 - sprite_draw_px_offset[1]
   );
 }
 
 void init_pino(void){
   SPRITES_8x16; SHOW_SPRITES;
 
-  pino_x_position = 0; // init starting position
+  pino_block_x_position = 0; // init starting position
   draw_pino();
+}
+
+void jump_forward(void){
+  // ... do some animation in between probably
+
+  // land him on the next block (pos++)
+  pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
 }
 
 // handles pino's state (movement, position, state ecc)
 // returns 0 if pino is ok, 1 otherwise
 uint8_t update_pino(void){
-  // is he out of the screen?
-  if((pino_x_position*BLOCK_WIDTH_PX) + BLOCK_WIDTH_PX < SCX_REG) return 1;
+  // TBD out of bounds -> if we dont limit the right screen edge as well the player can just spam A
+  // uint8_t pino_left_edge = pino_block_x_position*BLOCK_WIDTH_PX;
+  // uint8_t pino_right_edge = pino_left_edge+ BLOCK_WIDTH_PX;
+  // if((pino_block_x_position*BLOCK_WIDTH_PX) + BLOCK_WIDTH_PX < SCX_REG) return 1;
+
+  // poll joypad status
+  last_btn = current_btn;
+  current_btn = joypad();
+
+  if(!(current_btn & last_btn) && (current_btn & J_A)) jump_forward();
 
   // draw him where he is
   draw_pino();

@@ -22,7 +22,7 @@ void show_endscreen(void){
   SHOW_BKG;
 
   // load ending tiles to bkg
-  set_bkg_data(0, 18, GameOverTiles);
+  set_bkg_data(0, 20, GameOverTiles);
   set_bkg_tiles(0, 0, GameOverMapWidth, GameOverMapHeight, GameOverMap);
 
   // ... maybe some recap/score in the future
