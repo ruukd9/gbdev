@@ -10,7 +10,6 @@
 /* local defs */
 // sprite number
 #define PINO_SPRITE_NR 0
-#define SCREEN_BUFFER_PX (DEVICE_SCREEN_BUFFER_WIDTH*8)
 
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
@@ -53,13 +52,6 @@ static void draw_pino(void){
   );
 }
 
-void init_pino(void){
-  SPRITES_8x16; SHOW_SPRITES;
-
-  pino_block_x_position = 0; // init starting position
-  draw_pino();
-}
-
 void jump_forward(void){
   // ... do some animation in between probably
 
@@ -67,13 +59,25 @@ void jump_forward(void){
   pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
 }
 
+void init_pino(void){
+  SPRITES_8x16; SHOW_SPRITES;
+
+  pino_block_x_position = 1; // init starting position
+  draw_pino();
+}
+
+uint8_t is_pino_ok(void){
+  // whats the first visible block?
+  uint8_t scx_zero_block = SCX_REG / BLOCK_WIDTH_PX;
+  uint8_t last_valid_block = (scx_zero_block + (MAP_COLS-1)) & (MAP_COLS-1);
+  // is he after it?
+  return pino_block_x_position >= scx_zero_block || pino_block_x_position < last_valid_block;
+}
+
 // handles pino's state (movement, position, state ecc)
 // returns 0 if pino is ok, 1 otherwise
 uint8_t update_pino(void){
-  // TBD out of bounds -> if we dont limit the right screen edge as well the player can just spam A
-  // uint8_t pino_left_edge = pino_block_x_position*BLOCK_WIDTH_PX;
-  // uint8_t pino_right_edge = pino_left_edge+ BLOCK_WIDTH_PX;
-  // if((pino_block_x_position*BLOCK_WIDTH_PX) + BLOCK_WIDTH_PX < SCX_REG) return 1;
+  if(!is_pino_ok()) return 1;
 
   // poll joypad status
   last_btn = current_btn;

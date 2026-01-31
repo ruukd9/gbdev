@@ -41,6 +41,11 @@ void main(void){
 
 // inits the random seed and then starts the main game loop
 static void await_start(void){
+  // reset camera
+  SCX_REG = 0;
+  // remove sprites
+  HIDE_SPRITES;
+
   // init rand seed
   // https://github.com/gbdk-2020/gbdk-2020/blob/develop/gbdk-lib/examples/gb/rand/src/rand.c
   uint16_t seed;
@@ -76,11 +81,6 @@ static void game_loop(void){
 
     vsync();
   }
-
-  // reset camera
-  SCX_REG = 0;
-  // remove sprites
-  HIDE_SPRITES;
 
   show_endscreen();
   // wait for start press to go again
