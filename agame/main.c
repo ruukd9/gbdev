@@ -1,6 +1,5 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
-#include <rand.h>
 
 #include "title.h"
 #include "map.h"
@@ -34,27 +33,12 @@ void main(void){
     OBP0_REG = DMG_PALETTE(DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY, DMG_BLACK);
   }
 
-  show_titlescreen();
-  // wait for start to begin
   await_start();
 }
 
-// inits the random seed and then starts the main game loop
+// shows the titlescreen and then starts the main loop
 static void await_start(void){
-  // reset camera
-  SCX_REG = 0;
-  // remove sprites
-  HIDE_SPRITES;
-
-  // init rand seed
-  // https://github.com/gbdk-2020/gbdk-2020/blob/develop/gbdk-lib/examples/gb/rand/src/rand.c
-  uint16_t seed;
-  waitpad(J_START);
-  seed = DIV_REG;
-  waitpadup();
-  seed |= (UWORD)DIV_REG << 8;
-  initrand(seed);
-
+  show_titlescreen();
   game_loop();
 }
 
@@ -63,10 +47,9 @@ static void game_loop(void){
   init_map();
   init_pino();
 
-  uint8_t scroll_timer  = 0;
+  uint8_t scroll_timer = SCROLL_SPEED;
 
   while(1){
-    scroll_timer++;
     if(scroll_timer == SCROLL_SPEED){
       // update overworld
       update_camera();
@@ -79,10 +62,10 @@ static void game_loop(void){
 
     if(update_pino()) break;
 
-    vsync();
+    scroll_timer++;
+    vsync(); // wait next frame
   }
 
   show_endscreen();
-  // wait for start press to go again
   await_start();
 }

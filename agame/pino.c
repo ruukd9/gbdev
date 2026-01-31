@@ -43,7 +43,6 @@ static void draw_pino(void){
   uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
   uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
   pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
-  set_sprite_data(0, 16, Pino);
   move_metasprite_ex(
     Pino_metasprite,
     0, PINO_PAL, PINO_SPRITE_NR,
@@ -63,6 +62,7 @@ void init_pino(void){
   SPRITES_8x16; SHOW_SPRITES;
 
   pino_block_x_position = 1; // init starting position
+  set_sprite_data(0, 16, Pino);
   draw_pino();
 }
 
