@@ -33,7 +33,7 @@ void animate_bg(void){
   uint8_t max_fish_block_y  = WORLD_MAX_Y+1; // at most sitting on a max height block
 
   for(uint8_t block_x=start_block_x; block_x<last_block_x; block_x++){
-    for(uint8_t block_y=min_fish_block_y; block_y<max_fish_block_y; block_y++){
+    for(uint8_t block_y=min_fish_block_y; block_y<=max_fish_block_y; block_y++){
       if(current_map_state[block_y*MAP_COLS + block_x] == FISH){
         uint8_t tile_y    = STARING_TILE_BLOCK_Y - (block_y*BLOCK_HEIGHT_TILES);  // subtract one block height every entry (stack)
         uint8_t y_offset  = current_map_height[block_x]*STEP_HEIGHT_OFFSET_TILES; // offset DOWN based on the y value

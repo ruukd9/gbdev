@@ -29,6 +29,7 @@ const metasprite_t Pino_metasprite[] = {
   METASPR_TERM
 };
 
+uint8_t pino_metasprites_nr; // hw sprites nr
 uint8_t pino_block_x_position; // current block x position (0->7)
 uint8_t pino_tile_y_position;  // this is in tiles cause height calculations is done in tiles
 // i have no clue why but the metasprite is drawn with 0,0 in these coordinates
@@ -43,12 +44,14 @@ static void draw_pino(void){
   uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
   uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
   pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
-  move_metasprite_ex(
+  pino_metasprites_nr = move_metasprite_ex(
     Pino_metasprite,
     0, PINO_PAL, PINO_SPRITE_NR,
     pino_block_x_position*BLOCK_WIDTH_PX - sprite_draw_px_offset[0] - SCX_REG, // -SCX cause we want him still in the world frame
     pino_tile_y_position*8 - sprite_draw_px_offset[1]
   );
+
+  hide_sprites_range(pino_metasprites_nr, MAX_HARDWARE_SPRITES);
 }
 
 void jump_forward(void){
