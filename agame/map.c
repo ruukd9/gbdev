@@ -113,7 +113,7 @@ void init_map(void){
   SHOW_BKG;
   uint8_t previous_col_world_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
   set_bkg_data(MAP_TILES_START, 17, BGTiles);
-  for(uint8_t x_tile=0; x_tile<=DEVICE_SCREEN_WIDTH;x_tile+=4){ // <= so we load an extra one to buffer
+  for(uint8_t x_tile=0; x_tile<DEVICE_SCREEN_BUFFER_WIDTH;x_tile+=4){
     previous_col_world_y = generate_column_for(x_tile, previous_col_world_y);
   }
 }
@@ -122,17 +122,22 @@ void init_map(void){
 // also generates next column of the map if necessary
 void update_camera(void){
   scroll_bkg(1, 0); // SCX_REG++
-  if((SCX_REG & (BLOCK_WIDTH_PX-1)) == 0){ // % 32
-    // travelled 1 block -> generate first out of bounds (next appearing)
-    // SCX_REG is the leftmost pixel on screen, goes from 0->255
-    // so we convert in block coords
-    // its the previous so we do -blockW
-    uint8_t last_col_x_coord = ((SCX_REG + SCREENWIDTH - BLOCK_WIDTH_PX)/BLOCK_WIDTH_PX) & 7; // % 8 == size of the array for wraparound
-    // get last used height
-    uint8_t last_col_world_y = current_map_height[last_col_x_coord];
-    // target the next tile to show the col at
-    uint8_t next_target_tile = ((SCX_REG/8) + DEVICE_SCREEN_WIDTH) & (DEVICE_SCREEN_BUFFER_WIDTH-1);
 
-    generate_column_for(next_target_tile, last_col_world_y);
+  // "hidden" portion of the map -> sliding window to replace with new tiles
+  uint8_t window_blocks_nr = MAP_COLS - (SCREENWIDTH/BLOCK_WIDTH_PX);
+
+  // todo: this should just be x % window_blocks_nr*BLOCK_WIDTH_PX but thats too slow to calc i think
+  if(SCX_REG == 0 || SCX_REG == window_blocks_nr*BLOCK_WIDTH_PX || SCX_REG == 2*window_blocks_nr*BLOCK_WIDTH_PX){
+    // get number of last block in view
+    uint8_t reference_x_block = (SCX_REG + SCREENWIDTH - BLOCK_WIDTH_PX)/BLOCK_WIDTH_PX & (MAP_COLS-1);
+    // get its height
+    uint8_t reference_world_y = current_map_height[reference_x_block];
+    // set first of the to-do blocks
+    uint8_t next_x_block = (reference_x_block + 1) & (MAP_COLS-1);
+
+    for(uint8_t block_i=0; block_i<window_blocks_nr; block_i++){
+      uint8_t x_tile = next_x_block*BLOCK_WIDTH_TILES + block_i*BLOCK_WIDTH_TILES;
+      reference_world_y = generate_column_for(x_tile, reference_world_y);
+    }
   }
 }

@@ -7,8 +7,8 @@
 #include "pino.h"
 
 /* local defs */
-// how many frames for +1px?
-#define SCROLL_SPEED 2
+#define MAP_PHASE       0
+#define ANIMATION_PHASE 1
 
 static void await_start(void);
 static void game_loop(void);
@@ -47,22 +47,25 @@ static void game_loop(void){
   init_map();
   init_pino();
 
-  uint8_t scroll_timer = SCROLL_SPEED;
+  // distribute load across frames
+  uint8_t game_phase = MAP_PHASE;
 
   while(1){
-    if(scroll_timer == SCROLL_SPEED){
-      // update overworld
-      update_camera();
+    if(game_phase == ANIMATION_PHASE){
       // bg tiles animation (fish and stuff)
-      // every 8px (px per tiles, sperimentally a decent framerate)
-      if((SCX_REG & 7) == 0) animate_bg();
+      // twice per block scroll is sperimentally a decent framerate
+      if((SCX_REG & (BLOCK_WIDTH_PX/2)-1) == 0) animate_bg();
 
-      scroll_timer = 0;
+      // try update player pos
+      if(update_pino()) break;
+    }else if(game_phase == MAP_PHASE){
+      // update overworld
+        update_camera();
     }
 
-    if(update_pino()) break;
+    // next render phase
+    game_phase = !game_phase;
 
-    scroll_timer++;
     vsync(); // wait next frame
   }
 

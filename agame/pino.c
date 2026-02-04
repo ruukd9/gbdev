@@ -70,11 +70,12 @@ void init_pino(void){
 }
 
 uint8_t is_pino_ok(void){
+  // todo: its probably bad to punish going forward, need to think of something else
   // whats the first visible block?
   uint8_t scx_zero_block = SCX_REG / BLOCK_WIDTH_PX;
-  uint8_t last_valid_block = (scx_zero_block + (MAP_COLS-1)) & (MAP_COLS-1);
-  // is he after it?
-  return pino_block_x_position >= scx_zero_block || pino_block_x_position < last_valid_block;
+  uint8_t distance_from_edge = (pino_block_x_position - scx_zero_block) & (MAP_COLS-1);
+  // is he still in view?
+  return distance_from_edge < SCREENWIDTH/BLOCK_WIDTH_PX;
 }
 
 // handles pino's state (movement, position, state ecc)
