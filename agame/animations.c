@@ -4,6 +4,7 @@
 #include "map.h"
 #include "utils.h"
 
+#include "res/bg/map/BGTiles.h"
 #include "res/bg/map/FishBlock.h"
 
 /* local defs */
@@ -20,12 +21,24 @@
 #define ANIMATE_DOWN  2
 #define ANIMATE_LEFT  3
 #define ANIMATE_RIGHT 4
+// animation "frame" (tile) index within BGTiles
+#define FISH_FRAME_0_START 0x0D
+#define FISH_FRAME_1_START 0x11
 
 const uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
 uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // current index of animation, one frame per fish, max COL fishes (recycled)
 
+uint8_t currentframe = 0;
 void animate_bg(void){
   /* FISHES */
+
+  // frame (tile) selection
+  if(currentframe == 0){
+    set_bkg_data(FISH_FRAME_0_START, 4, &BGTiles[FISH_FRAME_0_START*16]);
+  }else{
+    set_bkg_data(FISH_FRAME_0_START, 4, &BGTiles[FISH_FRAME_1_START*16]);
+  }
+
   // (this might be very heavy when added with everything else, we'll see)
   uint8_t start_block_x     = 0;
   uint8_t last_block_x      = MAP_COLS;
@@ -84,4 +97,6 @@ void animate_bg(void){
       }
     }
   }
+
+  currentframe = !currentframe;
 }

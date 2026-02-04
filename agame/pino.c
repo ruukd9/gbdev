@@ -70,12 +70,14 @@ void init_pino(void){
 }
 
 uint8_t is_pino_ok(void){
-  // todo: its probably bad to punish going forward, need to think of something else
-  // whats the first visible block?
-  uint8_t scx_zero_block = SCX_REG / BLOCK_WIDTH_PX;
-  uint8_t distance_from_edge = (pino_block_x_position - scx_zero_block) & (MAP_COLS-1);
-  // is he still in view?
-  return distance_from_edge < SCREENWIDTH/BLOCK_WIDTH_PX;
+  /* todo: its probably bad to punish going forward, need to think of something else */
+  // // whats the first visible block?
+  // uint8_t scx_zero_block = SCX_REG / BLOCK_WIDTH_PX;
+  // uint8_t distance_from_edge = (pino_block_x_position - scx_zero_block) & (MAP_COLS-1);
+  // // is he still in view?
+  // return distance_from_edge < SCREENWIDTH/BLOCK_WIDTH_PX;
+
+  return 1;
 }
 
 // handles pino's state (movement, position, state ecc)
@@ -87,7 +89,11 @@ uint8_t update_pino(void){
   last_btn = current_btn;
   current_btn = joypad();
 
-  if(!(current_btn & last_btn) && (current_btn & J_A)) jump_forward();
+  if(!(current_btn & last_btn) && (current_btn & J_A)){
+    jump_forward();
+    // update overworld
+    update_camera();
+  }
 
   // draw him where he is
   draw_pino();

@@ -121,7 +121,7 @@ void init_map(void){
 // scrolls everything right 1px
 // also generates next column of the map if necessary
 void update_camera(void){
-  scroll_bkg(1, 0); // SCX_REG++
+  scroll_bkg(BLOCK_WIDTH_PX, 0); // SCX_REG++
 
   // "hidden" portion of the map -> sliding window to replace with new tiles
   uint8_t window_blocks_nr = MAP_COLS - (SCREENWIDTH/BLOCK_WIDTH_PX);

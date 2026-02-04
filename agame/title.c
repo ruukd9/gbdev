@@ -31,6 +31,8 @@ void show_titlescreen(void){
   uint8_t should_show_text = 1;
 
   while(1){
+    vsync(); // await frame
+
     // animate "press start"
     if(idle_frames == IDLE_TITLE_FRAMES){
       idle_frames = 0;
@@ -54,7 +56,6 @@ void show_titlescreen(void){
     }
 
     idle_frames++;
-    vsync(); // wait next frame
   }
 }
 
