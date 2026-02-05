@@ -10,9 +10,9 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 16
-  Tiles                : 0 to 7
+  Tiles                : 0 to 15
 
-  Palette colors       : None.
+  Palette colors       : Included.
   SGB Palette          : None.
   CGB Palette          : None.
 
@@ -27,6 +27,78 @@
 
 /* Bank of tiles. */
 #define PinoBank 0
+
+/* Super Gameboy palette 0 */
+#define PinoSGBPal0c0 0
+#define PinoSGBPal0c1 0
+#define PinoSGBPal0c2 0
+#define PinoSGBPal0c3 0
+
+/* Super Gameboy palette 1 */
+#define PinoSGBPal1c0 6076
+#define PinoSGBPal1c1 8935
+#define PinoSGBPal1c2 6596
+#define PinoSGBPal1c3 5344
+
+/* Super Gameboy palette 2 */
+#define PinoSGBPal2c0 6076
+#define PinoSGBPal2c1 8935
+#define PinoSGBPal2c2 6596
+#define PinoSGBPal2c3 5344
+
+/* Super Gameboy palette 3 */
+#define PinoSGBPal3c0 6076
+#define PinoSGBPal3c1 8935
+#define PinoSGBPal3c2 6596
+#define PinoSGBPal3c3 5344
+
+/* Gameboy Color palette 0 */
+#define PinoCGBPal0c0 32523
+#define PinoCGBPal0c1 32767
+#define PinoCGBPal0c2 32005
+#define PinoCGBPal0c3 3171
+
+/* Gameboy Color palette 1 */
+#define PinoCGBPal1c0 6076
+#define PinoCGBPal1c1 8935
+#define PinoCGBPal1c2 6596
+#define PinoCGBPal1c3 5344
+
+/* Gameboy Color palette 2 */
+#define PinoCGBPal2c0 6076
+#define PinoCGBPal2c1 8935
+#define PinoCGBPal2c2 6596
+#define PinoCGBPal2c3 5344
+
+/* Gameboy Color palette 3 */
+#define PinoCGBPal3c0 6076
+#define PinoCGBPal3c1 8935
+#define PinoCGBPal3c2 6596
+#define PinoCGBPal3c3 5344
+
+/* Gameboy Color palette 4 */
+#define PinoCGBPal4c0 6076
+#define PinoCGBPal4c1 8935
+#define PinoCGBPal4c2 6596
+#define PinoCGBPal4c3 5344
+
+/* Gameboy Color palette 5 */
+#define PinoCGBPal5c0 6076
+#define PinoCGBPal5c1 8935
+#define PinoCGBPal5c2 6596
+#define PinoCGBPal5c3 5344
+
+/* Gameboy Color palette 6 */
+#define PinoCGBPal6c0 6076
+#define PinoCGBPal6c1 8935
+#define PinoCGBPal6c2 6596
+#define PinoCGBPal6c3 5344
+
+/* Gameboy Color palette 7 */
+#define PinoCGBPal7c0 6076
+#define PinoCGBPal7c1 8935
+#define PinoCGBPal7c2 6596
+#define PinoCGBPal7c3 5344
 /* Start of tile array. */
 extern const unsigned char Pino[];
 

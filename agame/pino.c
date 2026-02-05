@@ -10,6 +10,15 @@
 /* local defs */
 // sprite number
 #define PINO_SPRITE_NR 0
+// states
+#define IDLE    0
+#define JUMPING 1
+#define LANDING 2
+// animation duration (after how many frame to switch)
+#define IDLE_FRAME_RATE 10
+// idle metasprites
+#define PINO_IDLE_0 0
+#define PINO_IDLE_1 16
 
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
@@ -35,23 +44,38 @@ uint8_t pino_tile_y_position;  // this is in tiles cause height calculations is 
 // i have no clue why but the metasprite is drawn with 0,0 in these coordinates
 const int8_t sprite_draw_px_offset[] = { -DEVICE_SPRITE_PX_OFFSET_X, -DEVICE_SPRITE_PX_OFFSET_Y };
 
+uint8_t pino_current_state = IDLE;
+uint8_t pino_current_sprite = PINO_IDLE_0;
+uint8_t pino_frame_counter = 0;
+
 // detect button presses
 uint8_t current_btn;
 uint8_t last_btn;
 
-// draws pino at his currently saved x position
+// draws pino at his currently saved xy position in his current state (idle/jumping/landing)
 static void draw_pino(void){
-  uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
-  uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
-  pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
+  if(pino_frame_counter >= IDLE_FRAME_RATE){
+    pino_frame_counter = 0;
+    pino_current_sprite = pino_current_sprite == PINO_IDLE_0 ? PINO_IDLE_1 : PINO_IDLE_0;
+  }
+
   pino_metasprites_nr = move_metasprite_ex(
-    Pino_metasprite,
-    0, PINO_PAL, PINO_SPRITE_NR,
+    Pino_metasprite, pino_current_sprite,
+    PINO_PAL, PINO_SPRITE_NR,
     pino_block_x_position*BLOCK_WIDTH_PX - sprite_draw_px_offset[0] - SCX_REG, // -SCX cause we want him still in the world frame
     pino_tile_y_position*8 - sprite_draw_px_offset[1]
   );
 
   hide_sprites_range(pino_metasprites_nr, MAX_HARDWARE_SPRITES);
+
+  pino_frame_counter++;
+}
+
+// update pino y coord based on current x
+static void update_pino_height(void){
+  uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
+  uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
+  pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
 }
 
 void jump_forward(void){
@@ -65,8 +89,7 @@ void init_pino(void){
   SPRITES_8x16; SHOW_SPRITES;
 
   pino_block_x_position = 1; // init starting position
-  set_sprite_data(0, 16, Pino);
-  draw_pino();
+  set_sprite_data(0, 32, Pino);
 }
 
 uint8_t is_pino_ok(void){
@@ -95,6 +118,8 @@ uint8_t update_pino(void){
     update_camera();
   }
 
+  // load new x/y
+  update_pino_height();
   // draw him where he is
   draw_pino();
 
