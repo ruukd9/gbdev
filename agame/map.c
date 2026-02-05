@@ -112,7 +112,7 @@ void init_map(void){
   /* bkg stuff */
   SHOW_BKG;
   uint8_t previous_col_world_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
-  set_bkg_data(MAP_TILES_START, 17, BGTiles);
+  set_bkg_data(MAP_TILES_START, 21, BGTiles);
   for(uint8_t x_tile=0; x_tile<DEVICE_SCREEN_BUFFER_WIDTH;x_tile+=4){
     previous_col_world_y = generate_column_for(x_tile, previous_col_world_y);
   }

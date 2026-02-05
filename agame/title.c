@@ -9,7 +9,14 @@
 
 #include "title.h"
 
+/* local defs */
+// how many frames to idle animations for (aka animate every N)
 #define IDLE_TITLE_FRAMES 45
+// animate-able tiles data (the "press start" text)
+#define TEXT_AREA_START   ((0x0C * DEVICE_SCREEN_WIDTH) + 0x04) // index of the text start in TitleMap
+#define EMPTY_AREA_START  0                                     // start index of at least H*W tiles in TitleMap
+#define ANIMATE_AREA_H    1                                     // area height in tiles
+#define ANIMATE_AREA_W   12                                     // area width in tiles
 
 // draw/animate titlescreen
 // wait for start button to init rand seed and return to caller
@@ -26,8 +33,8 @@ void show_titlescreen(void){
   set_bkg_tiles(0, 0, TitleMapWidth, TitleMapHeight, TitleMap);
 
   // to animate the "press start"
-  const unsigned char BlankMask[16*8] = {0x00};
-  uint16_t idle_frames = IDLE_TITLE_FRAMES;
+  uint16_t tile_start; // index within TitleMap so > 255 potentially
+  uint8_t idle_frames = IDLE_TITLE_FRAMES;
   uint8_t should_show_text = 1;
 
   while(1){
@@ -35,12 +42,11 @@ void show_titlescreen(void){
 
     // animate "press start"
     if(idle_frames == IDLE_TITLE_FRAMES){
-      idle_frames = 0;
-      should_show_text ? 
-        set_bkg_data(0, 16, TitleTiles)
-        : set_bkg_data(8, 8, BlankMask);
-
+      tile_start = should_show_text ? TEXT_AREA_START : EMPTY_AREA_START;
+      set_bkg_tiles(0x04, 0x0C, ANIMATE_AREA_W, ANIMATE_AREA_H, &TitleMap[tile_start]);
+      // update state
       should_show_text = !should_show_text;
+      idle_frames = 0;
     }
 
     if(joypad() & J_START){

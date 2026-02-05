@@ -13,18 +13,25 @@
 #define FISH_TILE_TR     6
 #define FISH_TILE_BL     9
 #define FISH_TILE_BR    10
-// empty block to cover previous tiles (we'll get it from FishBlock too)
-#define FISH_TILE_EMPTY  0
-// animation direction / position in a 4x4 tiles block
+// empty block to cover previous tiles
+// we'll use it as the start of the mask making sure to always pick empty tiles ONLY (aka indexes NOT in FISH_TILE_XX)
+#define FISH_TILE_EMPTY 0
+// animation direction / position of the 2x2 inner center in a 4x4 tiles block
 #define ANIMATE_NONE  0
 #define ANIMATE_UP    1
 #define ANIMATE_DOWN  2
 #define ANIMATE_LEFT  3
 #define ANIMATE_RIGHT 4
 // animation "frame" (tile) index within BGTiles
-#define FISH_FRAME_0_START 0x0D
-#define FISH_FRAME_1_START 0x11
+// these are also referenced in FishBlock (which is the map for a fish block)
+#define FISH_FRAME_0_OFFSET 0 // address is 0x0D, offset zero
+#define FISH_FRAME_1_OFFSET 4 // address is 0x11, 4 tiles after the default frame
 
+// indexes to iterate drawable tiles
+const uint8_t fish_ani_tile_idx[4] = { FISH_TILE_TL, FISH_TILE_TR, FISH_TILE_BL, FISH_TILE_BR};
+uint8_t fish_ani_block[4]; // the actual 2x2 tiles block to draw/move
+
+// animation steps
 const uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
 uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // current index of animation, one frame per fish, max COL fishes (recycled)
 
@@ -33,10 +40,12 @@ void animate_bg(void){
   /* FISHES */
 
   // frame (tile) selection
-  if(currentframe == 0){
-    set_bkg_data(FISH_FRAME_0_START, 4, &BGTiles[FISH_FRAME_0_START*16]);
-  }else{
-    set_bkg_data(FISH_FRAME_0_START, 4, &BGTiles[FISH_FRAME_1_START*16]);
+  uint8_t tile_offset = currentframe == 0 ? FISH_FRAME_0_OFFSET : FISH_FRAME_1_OFFSET;
+  for(uint8_t i=0; i<4; i++){
+    // get the index of fishblock with the tile to draw
+    uint8_t tidx = fish_ani_tile_idx[i];
+    // account for tile offset in VRAM for drawable tiles based on frame
+    fish_ani_block[i] = FishBlock[tidx] + tile_offset;
   }
 
   // (this might be very heavy when added with everything else, we'll see)
@@ -58,42 +67,31 @@ void animate_bg(void){
 
         switch (current_ani_step){
           case ANIMATE_UP:
-            // draw fish at the top
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y, FishBlock[FISH_TILE_TL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y, FishBlock[FISH_TILE_TR]);
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_BL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_BR]);
+            // draw fish at the top (pick tiles based on animation offset)
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y, 2, 2, fish_ani_block, MAP_TILES_START);
             // mask bottom with empty
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_EMPTY]);
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y+2, 2, 1, &FishBlock[FISH_TILE_EMPTY], MAP_TILES_START);
             break;
           case ANIMATE_DOWN:
-            // draw fish at the bottom
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_TL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_TR]);
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+3, FishBlock[FISH_TILE_BL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+3, FishBlock[FISH_TILE_BR]);
+            // draw fish at the bottom (pick tiles based on animation offset)
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y+2, 2, 2, fish_ani_block, MAP_TILES_START);
             // mask top with empty
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_EMPTY]);
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y+1, 2, 1, &FishBlock[FISH_TILE_EMPTY], MAP_TILES_START);
             break;
           case ANIMATE_NONE:
           default:
-            // draw fish in the middle
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+1, FishBlock[FISH_TILE_TL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+1, FishBlock[FISH_TILE_TR]);
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+2, FishBlock[FISH_TILE_BL]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+2, FishBlock[FISH_TILE_BR]);
+            // draw fish in the middle (pick tiles based on animation offset)
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y+1, 2, 2, fish_ani_block, MAP_TILES_START);
             // mask bottom/top rows with empty
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+1, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
-            set_bkg_tile_xy(fish_top_left_x+2, fish_top_left_y+3, FishBlock[FISH_TILE_EMPTY]);
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y, 2, 1, &FishBlock[FISH_TILE_EMPTY], MAP_TILES_START);
+            set_bkg_based_tiles(fish_top_left_x+1, fish_top_left_y+3, 2, 1, &FishBlock[FISH_TILE_EMPTY], MAP_TILES_START);
             break;
         }
 
         // set next frame
         fish_ani_frame_idx[block_x] = current_ani_frame_idx+1 < LEN(fish_ani_steps) ? (current_ani_frame_idx+1) : 0;
+        // we wont have more than 1 fish per-y-coord
+        break;
       }
     }
   }
