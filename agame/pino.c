@@ -13,12 +13,12 @@
 // states
 #define IDLE    0
 #define JUMPING 1
-#define LANDING 2
 // animation duration (after how many frame to switch)
 #define IDLE_FRAME_RATE 10
 // idle metasprites
-#define PINO_IDLE_0 0
-#define PINO_IDLE_1 16
+#define PINO_IDLE_0    0
+#define PINO_IDLE_1   16
+#define PINO_JUMPING  32
 
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
@@ -39,14 +39,20 @@ const metasprite_t Pino_metasprite[] = {
 };
 
 uint8_t pino_metasprites_nr; // hw sprites nr
-uint8_t pino_block_x_position; // current block x position (0->7)
-uint8_t pino_tile_y_position;  // this is in tiles cause height calculations is done in tiles
+uint8_t pino_block_x_position; // current block x position (0->7) to check for events and placement on the map
 // i have no clue why but the metasprite is drawn with 0,0 in these coordinates
 const int8_t sprite_draw_px_offset[] = { -DEVICE_SPRITE_PX_OFFSET_X, -DEVICE_SPRITE_PX_OFFSET_Y };
 
-uint8_t pino_current_state = IDLE;
-uint8_t pino_current_sprite = PINO_IDLE_0;
-uint8_t pino_frame_counter = 0;
+uint8_t pino_current_state;
+uint8_t pino_current_sprite;
+uint8_t pino_frame_counter;
+// frame-by-frame y offset while jumping, should be BLOCK_WIDTH_PX long
+const uint8_t jumping_curve_ppf[] = {
+   1,  2,  3,  4,  5,  6,  7,  8,
+   9, 10, 11, 12, 13, 14, 15, 16,
+  15, 14, 13, 12, 11, 10,  9,  8,
+   7,  6,  5,  4,  3,  2,  1,  0
+};
 
 // detect button presses
 uint8_t current_btn;
@@ -54,16 +60,55 @@ uint8_t last_btn;
 
 // draws pino at his currently saved xy position in his current state (idle/jumping/landing)
 static void draw_pino(void){
-  if(pino_frame_counter >= IDLE_FRAME_RATE){
-    pino_frame_counter = 0;
-    pino_current_sprite = pino_current_sprite == PINO_IDLE_0 ? PINO_IDLE_1 : PINO_IDLE_0;
+  // in case we need to adjust the position during jump
+  uint8_t pino_x_jump_offset = 0;
+  uint8_t pino_y_jump_offset = 0;
+
+  switch (pino_current_state){
+    case JUMPING:
+      // check for how long we've been jumping
+      if(pino_frame_counter < BLOCK_WIDTH_PX){
+        // we havent traveled enough -> x++ (and y-- for jump)
+        pino_x_jump_offset = pino_frame_counter;
+        pino_y_jump_offset = jumping_curve_ppf[pino_frame_counter];
+        // update overworld (SCX++) along with him
+        update_camera();
+      }else{
+        // traveled a block -> go back to idle + update block pos
+        pino_current_state = IDLE;
+        pino_current_sprite = PINO_IDLE_0;
+        pino_frame_counter = 0;
+        pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
+      }
+
+      break;
+    case IDLE:
+    default:
+      // idle animation sprite tile swap
+      if(pino_frame_counter >= IDLE_FRAME_RATE){
+        pino_frame_counter = 0;
+        pino_current_sprite = pino_current_sprite == PINO_IDLE_0 ? PINO_IDLE_1 : PINO_IDLE_0;
+      }
+
+      break;
   }
+
+  // calc base position (based on block grid, disregarding state)
+  uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
+  uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
+  uint8_t pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
+
+  uint8_t pino_x_px = pino_block_x_position*BLOCK_WIDTH_PX;
+  uint8_t pino_y_px = pino_tile_y_position*8;
+
+  pino_x_px += pino_x_jump_offset;
+  pino_y_px -= pino_y_jump_offset;
 
   pino_metasprites_nr = move_metasprite_ex(
     Pino_metasprite, pino_current_sprite,
     PINO_PAL, PINO_SPRITE_NR,
-    pino_block_x_position*BLOCK_WIDTH_PX - sprite_draw_px_offset[0] - SCX_REG, // -SCX cause we want him still in the world frame
-    pino_tile_y_position*8 - sprite_draw_px_offset[1]
+    pino_x_px - sprite_draw_px_offset[0] - SCX_REG, // -SCX cause we want him still in the world frame
+    pino_y_px - sprite_draw_px_offset[1]
   );
 
   hide_sprites_range(pino_metasprites_nr, MAX_HARDWARE_SPRITES);
@@ -71,25 +116,23 @@ static void draw_pino(void){
   pino_frame_counter++;
 }
 
-// update pino y coord based on current x
-static void update_pino_height(void){
-  uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
-  uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
-  pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
-}
-
-void jump_forward(void){
-  // ... do some animation in between probably
-
-  // land him on the next block (pos++)
-  pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
+void set_jumping(void){
+  pino_current_state = JUMPING;
+  pino_current_sprite = PINO_JUMPING;
+  pino_frame_counter = 0;
 }
 
 void init_pino(void){
   SPRITES_8x16; SHOW_SPRITES;
 
-  pino_block_x_position = 1; // init starting position
-  set_sprite_data(0, 32, Pino);
+  set_sprite_data(0, 48, Pino);
+
+  // init starting position
+  pino_block_x_position = 1;
+  // init state
+  pino_current_state = IDLE;
+  pino_current_sprite = PINO_IDLE_0;
+  pino_frame_counter = 0;
 }
 
 uint8_t is_pino_ok(void){
@@ -112,14 +155,8 @@ uint8_t update_pino(void){
   last_btn = current_btn;
   current_btn = joypad();
 
-  if(!(current_btn & last_btn) && (current_btn & J_A)){
-    jump_forward();
-    // update overworld
-    update_camera();
-  }
+  if(!(current_btn & last_btn) && (current_btn & J_A)) set_jumping();
 
-  // load new x/y
-  update_pino_height();
   // draw him where he is
   draw_pino();
 
