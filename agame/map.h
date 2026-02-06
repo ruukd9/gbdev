@@ -13,6 +13,7 @@
 #define WORLD_MAX_Y               4 // max height of the solid blocks in a col, NEEDS to be < COL_HEIGHT to make sense
 #define STEP_HEIGHT_OFFSET_TILES (BLOCK_HEIGHT_TILES - STEP_HEIGHT)             // offset down for a single unit of "step" (height)
 #define STARING_TILE_BLOCK_Y (DEVICE_SCREEN_HEIGHT - STEP_HEIGHT)  // top of the first (bottomest) visible block in the col
+#define SCROLL_SPEED 2 // px per frame (needs to divide BLOCK_WIDTH_PX)
 // flags
 #define EMPTY     0
 #define SOLID     1

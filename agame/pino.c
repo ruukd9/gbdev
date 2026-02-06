@@ -20,6 +20,11 @@
 #define PINO_IDLE_1   16
 #define PINO_JUMPING  32
 
+static uint8_t is_pino_ok(void);
+static void set_idle(void);
+static void set_jumping(void);
+static void draw_pino(void);
+
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
 const palette_color_t Pino_palette[] = {
@@ -46,12 +51,10 @@ const int8_t sprite_draw_px_offset[] = { -DEVICE_SPRITE_PX_OFFSET_X, -DEVICE_SPR
 uint8_t pino_current_state;
 uint8_t pino_current_sprite;
 uint8_t pino_frame_counter;
-// frame-by-frame y offset while jumping, should be BLOCK_WIDTH_PX long
-const uint8_t jumping_curve_ppf[] = {
-   1,  2,  3,  4,  5,  6,  7,  8,
-   9, 10, 11, 12, 13, 14, 15, 16,
-  15, 14, 13, 12, 11, 10,  9,  8,
-   7,  6,  5,  4,  3,  2,  1,  0
+// frame-by-frame y offset while jumping, should be BLOCK_WIDTH_PX/SCROLL_SPEED long
+const uint8_t jumping_curve_map[] = {
+  8, 10, 12, 16, 18, 20, 20, 24,
+  24, 20, 20, 18, 16, 12, 10, 8
 };
 
 // detect button presses
@@ -67,17 +70,15 @@ static void draw_pino(void){
   switch (pino_current_state){
     case JUMPING:
       // check for how long we've been jumping
-      if(pino_frame_counter < BLOCK_WIDTH_PX){
+      if(pino_frame_counter < BLOCK_WIDTH_PX/SCROLL_SPEED){
         // we havent traveled enough -> x++ (and y-- for jump)
-        pino_x_jump_offset = pino_frame_counter;
-        pino_y_jump_offset = jumping_curve_ppf[pino_frame_counter];
+        pino_x_jump_offset = pino_frame_counter*SCROLL_SPEED;
+        pino_y_jump_offset = jumping_curve_map[pino_frame_counter];
         // update overworld (SCX++) along with him
         update_camera();
       }else{
         // traveled a block -> go back to idle + update block pos
-        pino_current_state = IDLE;
-        pino_current_sprite = PINO_IDLE_0;
-        pino_frame_counter = 0;
+        set_idle();
         pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
       }
 
@@ -116,26 +117,22 @@ static void draw_pino(void){
   pino_frame_counter++;
 }
 
-void set_jumping(void){
-  pino_current_state = JUMPING;
-  pino_current_sprite = PINO_JUMPING;
-  pino_frame_counter = 0;
-}
-
-void init_pino(void){
-  SPRITES_8x16; SHOW_SPRITES;
-
-  set_sprite_data(0, 48, Pino);
-
-  // init starting position
-  pino_block_x_position = 1;
-  // init state
+/*************************************/
+/*           STATE UPDATE            */
+/*************************************/
+static void set_idle(void){
   pino_current_state = IDLE;
   pino_current_sprite = PINO_IDLE_0;
   pino_frame_counter = 0;
 }
 
-uint8_t is_pino_ok(void){
+static void set_jumping(void){
+  pino_current_state = JUMPING;
+  pino_current_sprite = PINO_JUMPING;
+  pino_frame_counter = 0;
+}
+
+static uint8_t is_pino_ok(void){
   /* todo: its probably bad to punish going forward, need to think of something else */
   // // whats the first visible block?
   // uint8_t scx_zero_block = SCX_REG / BLOCK_WIDTH_PX;
@@ -144,6 +141,20 @@ uint8_t is_pino_ok(void){
   // return distance_from_edge < SCREENWIDTH/BLOCK_WIDTH_PX;
 
   return 1;
+}
+
+/**************************************/
+/*             MANAGEMENT             */
+/**************************************/
+void init_pino(void){
+  SPRITES_8x16; SHOW_SPRITES;
+
+  set_sprite_data(0, 48, Pino);
+
+  // init starting position
+  pino_block_x_position = 1;
+  // init state
+  set_idle();
 }
 
 // handles pino's state (movement, position, state ecc)
@@ -155,7 +166,7 @@ uint8_t update_pino(void){
   last_btn = current_btn;
   current_btn = joypad();
 
-  if(!(current_btn & last_btn) && (current_btn & J_A)) set_jumping();
+  if((current_btn ^ last_btn) && (current_btn & J_A)) set_jumping();
 
   // draw him where he is
   draw_pino();
