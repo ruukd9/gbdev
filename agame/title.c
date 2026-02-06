@@ -8,6 +8,7 @@
 #include "res/bg/gg/GameOverMap.h"
 
 #include "title.h"
+#include "map.h"
 
 /* local defs */
 // how many frames to idle animations for (aka animate every N)
@@ -26,7 +27,7 @@ void show_titlescreen(void){
   // remove sprites
   HIDE_SPRITES;
 
-  SHOW_BKG;
+  HIDE_WIN; SHOW_BKG;
 
   // set starting tiles
   set_bkg_data(0, 16, TitleTiles);
@@ -69,17 +70,17 @@ void show_titlescreen(void){
 // wait for start or A button return to caller
 void show_endscreen(void){
   // reset camera
-  SCX_REG = 0;
+  // SCX_REG = 0;
   // remove sprites
-  HIDE_SPRITES;
-
+  // HIDE_SPRITES;
   SHOW_BKG;
 
   // load ending tiles to bkg
-  set_bkg_data(0, 17, GameOverTiles);
-  set_bkg_tiles(0, 0, GameOverMapWidth, GameOverMapHeight, GameOverMap);
+  set_bkg_data(MAP_TILES_END+1, 17, GameOverTiles);
+  set_bkg_based_tiles(SCX_REG/8, 0, GameOverMapWidth, GameOverMapHeight, GameOverMap, MAP_TILES_END+1);
 
   // ... maybe some recap/score in the future
 
-  waitpad(J_A | J_START);
+  waitpad(J_START);
+  waitpadup();
 }

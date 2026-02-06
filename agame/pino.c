@@ -10,9 +10,6 @@
 /* local defs */
 // sprite number
 #define PINO_SPRITE_NR 0
-// states
-#define IDLE    0
-#define JUMPING 1
 // animation duration (after how many frame to switch)
 #define IDLE_FRAME_RATE 10
 // idle metasprites
@@ -45,6 +42,7 @@ const metasprite_t Pino_metasprite[] = {
 
 uint8_t pino_metasprites_nr; // hw sprites nr
 uint8_t pino_block_x_position; // current block x position (0->7) to check for events and placement on the map
+uint8_t pino_pos_ground_tile_y; // current ground tile (y) useful to have here to not recalc every time
 // i have no clue why but the metasprite is drawn with 0,0 in these coordinates
 const int8_t sprite_draw_px_offset[] = { -DEVICE_SPRITE_PX_OFFSET_X, -DEVICE_SPRITE_PX_OFFSET_Y };
 
@@ -96,7 +94,7 @@ static void draw_pino(void){
 
   // calc base position (based on block grid, disregarding state)
   uint8_t pino_pos_height = current_map_height[pino_block_x_position]; // level height of the block (0,1,2...->MAX_WORLD_Y)
-  uint8_t pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
+  pino_pos_ground_tile_y = STARING_TILE_BLOCK_Y - (pino_pos_height*STEP_HEIGHT); // y coord (tiles) of the ground for the 1st map block
   uint8_t pino_tile_y_position = pino_pos_ground_tile_y - BLOCK_HEIGHT_TILES; // y coord (tiles) from where to start drawing him
 
   uint8_t pino_x_px = pino_block_x_position*BLOCK_WIDTH_PX;
@@ -140,7 +138,8 @@ static uint8_t is_pino_ok(void){
   // // is he still in view?
   // return distance_from_edge < SCREENWIDTH/BLOCK_WIDTH_PX;
 
-  return 1;
+  // y goes backwards..
+  return pino_current_state == JUMPING || pino_pos_ground_tile_y < current_sea_y_tile;
 }
 
 /**************************************/

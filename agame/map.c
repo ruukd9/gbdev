@@ -13,17 +13,22 @@
 #include "res/bg/map/CrackedBlock.h"
 
 #include "map.h"
+#include "pino.h"
 
 /* local defs */
-#define SEA_LEVEL_RATE 60 // frame for a +1 tile
+#define SEA_LEVEL_RATE 30 // frame for a +1 tile
+#define SEA_UP    0
+#define SEA_DOWN  1
 
 // holds the entire map state (interesting flags like is it an enemy, what kind of block etc)
 uint8_t current_map_state[MAP_COLS*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
 // holds the y value (ground level) for every col, always starts at 0,0 regardless of scroll
 uint8_t current_map_height[MAP_COLS] = {0};
 
+static void draw_sea(void);
+uint8_t sea_motion;
 uint8_t current_sea_y_tile;
-uint8_t sea_frame_count = 0;
+uint8_t sea_frame_count;
 
 // creates and draws a new column on the map
 // also updates current_map_state
@@ -124,17 +129,39 @@ void init_map(void){
   }
 
   current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
+  sea_frame_count = 0;
   draw_sea();
+  SHOW_WIN;
 }
 
-void draw_sea(void){
-  sea_frame_count++;
+static void draw_sea(void){
+  /* sea as window (on top) */
+  set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
+  move_win(7, current_sea_y_tile*8);
+}
 
-  set_bkg_based_tiles(0, current_sea_y_tile, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
-  if(sea_frame_count == SEA_LEVEL_RATE){
-    current_sea_y_tile--;
-    sea_frame_count = 0;
+void update_sea(void){
+  switch (pino_current_state){
+    case JUMPING:
+      // reverse if jumped
+      if(sea_motion == SEA_UP && current_sea_y_tile < DEVICE_SCREEN_HEIGHT-1){
+        current_sea_y_tile++;
+        draw_sea();
+      }
+      sea_motion = SEA_DOWN;
+      break;
+    case IDLE:
+    default:
+      sea_motion = SEA_UP;
+      sea_frame_count++;
+      if(sea_frame_count == SEA_LEVEL_RATE){
+        current_sea_y_tile--;
+        sea_frame_count = 0;
+        draw_sea();
+      }
+      break;
   }
+
 }
 
 // scrolls everything right 1px

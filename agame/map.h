@@ -1,7 +1,8 @@
 #ifndef __map_h_INCLUDE
 #define __map_h_INCLUDE
 
-#define MAP_TILES_START 0
+#define MAP_TILES_START 0x00
+#define MAP_TILES_END   0x16
 // block size
 #define BLOCK_WIDTH_PX     32
 #define BLOCK_WIDTH_TILES   4
@@ -31,6 +32,6 @@ extern uint8_t current_sea_y_tile;
 
 void init_map(void);
 void update_camera(void);
-void draw_sea(void);
+void update_sea(void);
 
 #endif

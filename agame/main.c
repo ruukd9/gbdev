@@ -70,7 +70,7 @@ static void game_loop(void){
       // try update player pos
       if(update_pino()) break;
 
-      draw_sea();
+      update_sea();
     // }
 
     // next render phase
