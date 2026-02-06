@@ -1,6 +1,5 @@
 #include <gb/gb.h>
 #include <rand.h>
-#include <gb/metasprites.h>
 #include <gb/cgb.h>
 
 #include "res/bg/map/BGTiles.h"
@@ -46,16 +45,18 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
   const unsigned char *block_tile; // kind of tile
   uint8_t platform_block_height  = new_world_blocks_y + 1;  // number of solid blocks in that col (or solid height of the col)
   // get a new block for every block of the col (from the bottom)
-  // we have to go for more than COL_HEIGHT (based on WORLD_MAX_Y)
+  // we have to go for more than COL_HEIGHT (based on the new block y)
   // cause eventually we'll shift the whole col DOWN according to the STEP_HEIGHT and new_world_blocks_y (we have to guarantee to overwrite every "old" tile)
   // this does mean that we potentially draw out of bounds for higher levels but its not necessarily relevant since you dont see it
   // also its easy to add an if() to not draw them if it becomes an issue
   // is it the best way to do it? idk but its what i thought of
-  uint8_t shift_offset = platform_block_height*STEP_HEIGHT_OFFSET_TILES;
-  // ceiling of ratio offset/tilesH to know how many tiles needed to cover the post-shift hole
-  uint8_t height_to_cover = COL_HEIGHT + ( (shift_offset+BLOCK_HEIGHT_TILES-1)/BLOCK_HEIGHT_TILES );
+  uint8_t shift_offset = new_world_blocks_y*STEP_HEIGHT_OFFSET_TILES; // offset DOWN based on the y value (shift assembled column down X tiles)
+  // ceiling(ratio gap/tilesH) to know how many tiles needed to cover the post-shift hole
+  uint8_t height_to_cover = COL_HEIGHT + (LEFTOVER_TILES+shift_offset + BLOCK_HEIGHT_TILES - 1)/BLOCK_HEIGHT_TILES;
   uint8_t col_has_cloud = 0; // at most one cloud per col
   for(uint8_t block_i=0; block_i<height_to_cover; block_i++){
+    uint8_t tile_y = STARING_TILE_BLOCK_Y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
+
     if(block_i < platform_block_height){
       // between 0 and the solid height
       uint8_t r_block = (uint8_t)rand();
@@ -85,9 +86,7 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
       }
     }
 
-    uint8_t tile_y = STARING_TILE_BLOCK_Y - (block_i*BLOCK_HEIGHT_TILES); // subtract one block height every entry (stack)
-    uint8_t y_offset = new_world_blocks_y*STEP_HEIGHT_OFFSET_TILES;       // offset DOWN based on the y value  (shift assembled column down X tiles)
-    set_bkg_based_tiles(target_x_tile, tile_y + y_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
+    set_bkg_based_tiles(target_x_tile, tile_y + shift_offset, BLOCK_WIDTH_TILES, BLOCK_HEIGHT_TILES, block_tile, MAP_TILES_START);
 
     // update current map state with the new col
     // x_coord = target_x_tile/BLOCK_WIDTH_TILES
@@ -126,8 +125,9 @@ void update_camera(void){
   // "hidden" portion of the map -> sliding window to replace with new tiles
   uint8_t window_blocks_nr = MAP_COLS - (SCREENWIDTH/BLOCK_WIDTH_PX);
 
-  // todo: this should just be x % window_blocks_nr*BLOCK_WIDTH_PX but thats too slow to calc i think
-  if(SCX_REG == 0 || SCX_REG == window_blocks_nr*BLOCK_WIDTH_PX || SCX_REG == 2*window_blocks_nr*BLOCK_WIDTH_PX){
+  // xtodo: this should just be x % window_blocks_nr*BLOCK_WIDTH_PX but thats too slow to calc i think
+  // if(SCX_REG == 0 || SCX_REG == window_blocks_nr*BLOCK_WIDTH_PX || SCX_REG == 2*window_blocks_nr*BLOCK_WIDTH_PX){
+  if((SCX_REG & (BLOCK_WIDTH_PX-1)) == 0){
     // get number of last block in view
     uint8_t reference_x_block = (SCX_REG + SCREENWIDTH - BLOCK_WIDTH_PX)/BLOCK_WIDTH_PX & (MAP_COLS-1);
     // get its height
@@ -135,9 +135,12 @@ void update_camera(void){
     // set first of the to-do blocks
     uint8_t next_x_block = (reference_x_block + 1) & (MAP_COLS-1);
 
-    for(uint8_t block_i=0; block_i<window_blocks_nr; block_i++){
-      uint8_t x_tile = next_x_block*BLOCK_WIDTH_TILES + block_i*BLOCK_WIDTH_TILES;
-      reference_world_y = generate_column_for(x_tile, reference_world_y);
-    }
+    // for(uint8_t block_i=0; block_i<window_blocks_nr; block_i++){
+    //   uint8_t x_tile = next_x_block*BLOCK_WIDTH_TILES + block_i*BLOCK_WIDTH_TILES;
+    //   reference_world_y = generate_column_for(x_tile, reference_world_y);
+    // }
+
+    uint8_t x_tile = next_x_block*BLOCK_WIDTH_TILES;
+    reference_world_y = generate_column_for(x_tile, reference_world_y);
   }
 }

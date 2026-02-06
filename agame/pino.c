@@ -166,7 +166,7 @@ uint8_t update_pino(void){
   last_btn = current_btn;
   current_btn = joypad();
 
-  if((current_btn ^ last_btn) && (current_btn & J_A)) set_jumping();
+  if(pino_current_state != JUMPING && (current_btn ^ last_btn) && (current_btn & J_A)) set_jumping();
 
   // draw him where he is
   draw_pino();

@@ -8,11 +8,12 @@
 #define BLOCK_HEIGHT_PX    32
 #define BLOCK_HEIGHT_TILES  4
 // world vars
-#define COL_HEIGHT                6 // visible 32x32 blocks in a col
+#define COL_HEIGHT (DEVICE_SCREEN_HEIGHT/BLOCK_HEIGHT_TILES) // 32x32 blocks in a col
+#define LEFTOVER_TILES DEVICE_SCREEN_HEIGHT - COL_HEIGHT*BLOCK_HEIGHT_TILES // could be zero depending on remainderless division
 #define STEP_HEIGHT               1 // tile height of the overlap between two different (consecutive) height levels
-#define WORLD_MAX_Y               4 // max height of the solid blocks in a col, NEEDS to be < COL_HEIGHT to make sense
-#define STEP_HEIGHT_OFFSET_TILES (BLOCK_HEIGHT_TILES - STEP_HEIGHT)             // offset down for a single unit of "step" (height)
-#define STARING_TILE_BLOCK_Y (DEVICE_SCREEN_HEIGHT - STEP_HEIGHT)  // top of the first (bottomest) visible block in the col
+#define WORLD_MAX_Y               3 // max height of the solid blocks in a col, NEEDS to be < COL_HEIGHT to make sense
+#define STEP_HEIGHT_OFFSET_TILES (BLOCK_HEIGHT_TILES - STEP_HEIGHT) // offset down for a single unit of "step" (height)
+#define STARING_TILE_BLOCK_Y (DEVICE_SCREEN_HEIGHT - 4*STEP_HEIGHT) // top of the first (bottomest) visible block in the col
 #define SCROLL_SPEED 2 // px per frame (needs to divide BLOCK_WIDTH_PX)
 // flags
 #define EMPTY     0
