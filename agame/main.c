@@ -69,6 +69,8 @@ static void game_loop(void){
     // }else if(game_phase == MAP_PHASE){
       // try update player pos
       if(update_pino()) break;
+
+      draw_sea();
     // }
 
     // next render phase

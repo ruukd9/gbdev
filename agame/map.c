@@ -4,6 +4,7 @@
 
 #include "res/bg/map/BGTiles.h"
 #include "res/bg/map/BGMap.h"
+#include "res/bg/map/SeaMap.h"
 
 #include "res/bg/map/EmptyBlock.h"
 #include "res/bg/map/CloudBlock.h"
@@ -13,10 +14,16 @@
 
 #include "map.h"
 
+/* local defs */
+#define SEA_LEVEL_RATE 60 // frame for a +1 tile
+
 // holds the entire map state (interesting flags like is it an enemy, what kind of block etc)
 uint8_t current_map_state[MAP_COLS*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
 // holds the y value (ground level) for every col, always starts at 0,0 regardless of scroll
 uint8_t current_map_height[MAP_COLS] = {0};
+
+uint8_t current_sea_y_tile;
+uint8_t sea_frame_count = 0;
 
 // creates and draws a new column on the map
 // also updates current_map_state
@@ -111,9 +118,22 @@ void init_map(void){
   /* bkg stuff */
   SHOW_BKG;
   uint8_t previous_col_world_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
-  set_bkg_data(MAP_TILES_START, 21, BGTiles);
+  set_bkg_data(MAP_TILES_START, 23, BGTiles);
   for(uint8_t x_tile=0; x_tile<DEVICE_SCREEN_BUFFER_WIDTH;x_tile+=4){
     previous_col_world_y = generate_column_for(x_tile, previous_col_world_y);
+  }
+
+  current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
+  draw_sea();
+}
+
+void draw_sea(void){
+  sea_frame_count++;
+
+  set_bkg_based_tiles(0, current_sea_y_tile, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
+  if(sea_frame_count == SEA_LEVEL_RATE){
+    current_sea_y_tile--;
+    sea_frame_count = 0;
   }
 }
 

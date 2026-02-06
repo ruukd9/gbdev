@@ -27,8 +27,10 @@
 
 extern uint8_t current_map_state[MAP_COLS*MAP_ROWS];
 extern uint8_t current_map_height[MAP_COLS];
+extern uint8_t current_sea_y_tile;
 
 void init_map(void);
 void update_camera(void);
+void draw_sea(void);
 
 #endif
