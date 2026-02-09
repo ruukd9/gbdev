@@ -6,13 +6,6 @@
 #include "animations.h"
 #include "pino.h"
 
-/* local defs */
-// main loop phases
-#define MAP_PHASE       0
-#define ANIMATION_PHASE 1
-// how many frames to idle animations for (aka animate every N)
-#define IDLE_ANI_FRAMES 15
-
 static void await_start(void);
 static void game_loop(void);
 
@@ -50,31 +43,14 @@ static void game_loop(void){
   init_map();
   init_pino();
 
-  // animation helper
-  uint8_t framecount = IDLE_ANI_FRAMES;
-  // distribute load across frames
-  // uint8_t game_phase = MAP_PHASE;
-
   while(1){
+    /* UPDATE STATE */
+    if(update_pino()) break;
+    update_sea();
+
     vsync(); // await frame
 
-    // if(game_phase == ANIMATION_PHASE){
-      // bg tiles animation (fish and stuff)
-      if(framecount == IDLE_ANI_FRAMES){
-        framecount = 0;
-        animate_bg();
-      }
-
-      framecount++;
-    // }else if(game_phase == MAP_PHASE){
-      // try update player pos
-      if(update_pino()) break;
-
-      update_sea();
-    // }
-
-    // next render phase
-    // game_phase = !game_phase;
+    animate_bg();
   }
 
   show_endscreen();

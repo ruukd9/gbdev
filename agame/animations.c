@@ -8,6 +8,8 @@
 #include "res/bg/map/FishBlock.h"
 
 /* local defs */
+// how many frames to idle animations for (aka animate every N)
+#define IDLE_ANI_FRAMES 15
 // fish animate-able tiles index in FishBlock (inner 2x2 of a 4x4 block)
 #define FISH_TILE_TL     5
 #define FISH_TILE_TR     6
@@ -34,13 +36,13 @@ uint8_t fish_ani_block[4]; // the actual 2x2 tiles block to draw/move
 // animation steps
 const uint8_t fish_ani_steps[4] = { ANIMATE_NONE, ANIMATE_UP, ANIMATE_NONE, ANIMATE_DOWN };
 uint8_t fish_ani_frame_idx[MAP_COLS] = {0}; // current index of animation, one frame per fish, max COL fishes (recycled)
+uint8_t currentframe_tile = 0;
 
-uint8_t currentframe = 0;
-void animate_bg(void){
-  /* FISHES */
+uint8_t framecount = IDLE_ANI_FRAMES;
 
+static void animate_fishes(void){
   // frame (tile) selection
-  uint8_t tile_offset = currentframe == 0 ? FISH_FRAME_0_OFFSET : FISH_FRAME_1_OFFSET;
+  uint8_t tile_offset = currentframe_tile == 0 ? FISH_FRAME_0_OFFSET : FISH_FRAME_1_OFFSET;
   for(uint8_t i=0; i<4; i++){
     // get the index of fishblock with the tile to draw
     uint8_t tidx = fish_ani_tile_idx[i];
@@ -96,5 +98,14 @@ void animate_bg(void){
     }
   }
 
-  currentframe = !currentframe;
+  currentframe_tile = !currentframe_tile;
+}
+
+void animate_bg(void){
+  framecount++;
+
+  if(framecount == IDLE_ANI_FRAMES){
+    framecount = 0;
+    animate_fishes();
+  }
 }
