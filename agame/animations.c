@@ -102,10 +102,10 @@ static void animate_fishes(void){
 }
 
 void animate_bg(void){
-  framecount++;
-
   if(framecount == IDLE_ANI_FRAMES){
     framecount = 0;
     animate_fishes();
   }
+
+  framecount++;
 }

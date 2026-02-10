@@ -20,7 +20,6 @@
 static uint8_t is_pino_ok(void);
 static void set_idle(void);
 static void set_jumping(void);
-static void draw_pino(void);
 
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
@@ -59,8 +58,8 @@ const uint8_t jumping_curve_map[] = {
 uint8_t current_btn;
 uint8_t last_btn;
 
-// draws pino at his currently saved xy position in his current state (idle/jumping/landing)
-static void draw_pino(void){
+// draws pino at his currently saved xy position in his current state (IDLE/JUMPING)
+void draw_pino(void){
   // in case we need to adjust the position during jump
   uint8_t pino_x_jump_offset = 0;
   uint8_t pino_y_jump_offset = 0;
@@ -118,18 +117,21 @@ static void draw_pino(void){
 /*************************************/
 /*           STATE UPDATE            */
 /*************************************/
+// sets current state/frame as IDLE
 static void set_idle(void){
   pino_current_state = IDLE;
   pino_current_sprite = PINO_IDLE_0;
   pino_frame_counter = 0;
 }
-
+// sets current state/frame as JUMPING
 static void set_jumping(void){
   pino_current_state = JUMPING;
   pino_current_sprite = PINO_JUMPING;
   pino_frame_counter = 0;
 }
 
+// checks whether pino is OK
+// @returns 1 if yes, 0 if no
 static uint8_t is_pino_ok(void){
   /* todo: its probably bad to punish going forward, need to think of something else */
   // // whats the first visible block?
@@ -145,6 +147,7 @@ static uint8_t is_pino_ok(void){
 /**************************************/
 /*             MANAGEMENT             */
 /**************************************/
+// sets sprite data + initial state
 void init_pino(void){
   SPRITES_8x16; SHOW_SPRITES;
 
@@ -157,9 +160,9 @@ void init_pino(void){
 }
 
 // handles pino's state (movement, position, state ecc)
-// returns 0 if pino is ok, 1 otherwise
-uint8_t update_pino(void){
-  if(!is_pino_ok()) return 1;
+// @returns current pino state (JUMPING/IDLE/KO)
+int8_t update_pino(void){
+  if(!is_pino_ok()) return KO;
 
   // poll joypad status
   last_btn = current_btn;
@@ -167,8 +170,5 @@ uint8_t update_pino(void){
 
   if(pino_current_state != JUMPING && (current_btn ^ last_btn) && (current_btn & J_A)) set_jumping();
 
-  // draw him where he is
-  draw_pino();
-
-  return 0;
+  return pino_current_state;
 }

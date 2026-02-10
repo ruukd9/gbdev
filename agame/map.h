@@ -32,6 +32,8 @@ extern uint8_t current_sea_y_tile;
 
 void init_map(void);
 void update_camera(void);
-void update_sea(void);
+
+void update_sea(int8_t);
+void draw_sea(void);
 
 #endif

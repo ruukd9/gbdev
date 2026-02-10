@@ -25,10 +25,10 @@ uint8_t current_map_state[MAP_COLS*(32/BLOCK_HEIGHT_TILES)] = {EMPTY};
 // holds the y value (ground level) for every col, always starts at 0,0 regardless of scroll
 uint8_t current_map_height[MAP_COLS] = {0};
 
-static void draw_sea(void);
-uint8_t sea_motion;
-uint8_t current_sea_y_tile;
-uint8_t sea_frame_count;
+// sea state helpers
+uint8_t sea_motion;         // SEA_UP / SEA_DOWN
+uint8_t current_sea_y_tile; // current level (top tile)
+uint8_t sea_frame_count;    // to increase +1 level
 
 // creates and draws a new column on the map
 // also updates current_map_state
@@ -117,8 +117,8 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
 
 // initializes world_height
 // load initial visible map (col by col)
-// which in turns also inits the current map state with the visible columns (+1)
-// also loads enemy sprite data
+// which in turns also inits the current map state
+// also initializes sea level/state
 void init_map(void){
   /* bkg stuff */
   SHOW_BKG;
@@ -130,41 +130,46 @@ void init_map(void){
 
   current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
   sea_frame_count = 0;
-  draw_sea();
-  SHOW_WIN;
 }
 
-static void draw_sea(void){
-  /* sea as window (on top) */
-  set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
-  move_win(7, current_sea_y_tile*8);
+// draws sea at its current level (tile)
+void draw_sea(void){
+  if(sea_frame_count == 0){
+    SHOW_WIN;
+    /* sea as window (on top) */
+    set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
+    move_win(7, current_sea_y_tile*8);
+  }
 }
 
-void update_sea(void){
-  switch (pino_current_state){
+// updates sea framecount/level based on pino state
+// JUMPING: -1, IDLE: +1
+// @param pino_state JUMPING/IDLE/KO
+void update_sea(int8_t pino_state){
+  switch (pino_state){
     case JUMPING:
       // reverse if jumped
       if(sea_motion == SEA_UP && current_sea_y_tile < DEVICE_SCREEN_HEIGHT-1){
         current_sea_y_tile++;
-        draw_sea();
+        sea_frame_count = 0;
       }
       sea_motion = SEA_DOWN;
       break;
     case IDLE:
-    default:
       sea_motion = SEA_UP;
       sea_frame_count++;
       if(sea_frame_count == SEA_LEVEL_RATE){
         current_sea_y_tile--;
         sea_frame_count = 0;
-        draw_sea();
       }
+    case KO:
+    default:
       break;
   }
 
 }
 
-// scrolls everything right 1px
+// scrolls everything right SCROLL_SPEED px
 // also generates next column of the map if necessary
 void update_camera(void){
   scroll_bkg(SCROLL_SPEED, 0); // SCX_REG++
