@@ -28,6 +28,7 @@ uint8_t current_map_height[MAP_COLS] = {0};
 // sea state helpers
 uint8_t sea_motion;         // SEA_UP / SEA_DOWN
 uint8_t current_sea_y_tile; // current level (top tile)
+uint8_t last_sea_y_tile;    // previous frame level
 uint8_t sea_frame_count;    // to increase +1 level
 
 // creates and draws a new column on the map
@@ -120,6 +121,11 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
 // which in turns also inits the current map state
 // also initializes sea level/state
 void init_map(void){
+  /* sea level */
+  // sea needs to move separately and be above the bkg
+  current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
+  sea_frame_count = 0;
+
   /* bkg stuff */
   SHOW_BKG;
   uint8_t previous_col_world_y = 0; //  0 == (SCREENHEIGHT - 16)px == (SCREENHEIGHT/8 - 2)tiles
@@ -127,18 +133,15 @@ void init_map(void){
   for(uint8_t x_tile=0; x_tile<DEVICE_SCREEN_BUFFER_WIDTH;x_tile+=4){
     previous_col_world_y = generate_column_for(x_tile, previous_col_world_y);
   }
-
-  current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
-  sea_frame_count = 0;
 }
 
 // draws sea at its current level (tile)
 void draw_sea(void){
-  if(sea_frame_count == 0){
-    SHOW_WIN;
-    /* sea as window (on top) */
+  if(last_sea_y_tile != current_sea_y_tile){
     set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
     move_win(7, current_sea_y_tile*8);
+    last_sea_y_tile = current_sea_y_tile;
+    SHOW_WIN;
   }
 }
 

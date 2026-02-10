@@ -46,14 +46,14 @@ static void game_loop(void){
   int8_t pino_state = IDLE;
   while(1){
     /* DRAW ITEMS */
-    // draw_sea();
+    draw_sea();
     draw_pino();  // also moves scx forward if jumping
     animate_bg();
 
     /* UPDATE STATE */
     pino_state = update_pino();
     if(pino_state == KO) break;
-    // update_sea(pino_state); // idle = goes UP, jumping = goes DOWN
+    update_sea(pino_state); // idle = goes UP, jumping = goes DOWN
 
     vsync(); // await frame
   }

@@ -7,7 +7,7 @@
  Info:
    Section       : 
    Bank          : 0
-   Map size      : 32 x 10
+   Map size      : 20 x 15
    Tile set      : Z:\usr\src\agame\res\bg\map\bg_tiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
@@ -20,8 +20,8 @@
 #ifndef __SeaMap_h_INCLUDE
 #define __SeaMap_h_INCLUDE
 
-#define SeaMapWidth 32
-#define SeaMapHeight 10
+#define SeaMapWidth 20
+#define SeaMapHeight 15
 #define SeaMapBank 0
 
 extern const unsigned char SeaMap[];
