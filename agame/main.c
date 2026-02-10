@@ -39,21 +39,29 @@ static void await_start(void){
 }
 
 static void game_loop(void){
-  // setup
+  /* SETUP */
+  // init items
   init_map();
   init_pino();
+  init_numbers_font();
+  // init score
+  // will always increase by (BLOCK_WIDTH_PX/SCROLL_SPEED) every time a jump is successful
+  uint16_t score = 0;
 
-  int8_t pino_state = IDLE;
+  int8_t pino_state;
+
   while(1){
     /* DRAW ITEMS */
     draw_sea();
     draw_pino();  // also moves scx forward if jumping
+    draw_number(0, 18, (score*SCROLL_SPEED)/BLOCK_WIDTH_PX, 1);
     animate_bg();
 
     /* UPDATE STATE */
     pino_state = update_pino();
-    if(pino_state == KO) break;
     update_sea(pino_state); // idle = goes UP, jumping = goes DOWN
+    if(pino_state == KO) break;
+    if(pino_state == JUMPING) score++;
 
     vsync(); // await frame
   }
