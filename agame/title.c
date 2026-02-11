@@ -10,6 +10,7 @@
 
 #include "title.h"
 #include "map.h"
+#include "pino.h"
 
 /* local defs */
 // tile offsets in VRAM
@@ -22,6 +23,8 @@
 #define EMPTY_AREA_START  0                                     // start index of at least H*W tiles in TitleMap
 #define ANIMATE_AREA_H    1                                     // area height in tiles
 #define ANIMATE_AREA_W   12                                     // area width in tiles
+
+static void draw_number(uint8_t x, uint8_t y, uint16_t n, uint8_t layer);
 
 // draw/animate titlescreen
 // wait for start button to init rand seed and return to caller
@@ -94,6 +97,15 @@ void init_hud(void){
   set_bkg_data(FONT_TILES_START, 12, ScoreTiles);
 }
 
+void draw_hud(void){
+  uint8_t hud_tile_y = DEVICE_SCREEN_HEIGHT-1 - current_sea_y_tile;
+  // score (bottom left)
+  draw_number(0, hud_tile_y, pino_score, 1);
+  // fishes (bottom right)
+  draw_number(DEVICE_SCREEN_WIDTH-5, hud_tile_y, pino_fishes, 1);
+  set_win_tile_xy(DEVICE_SCREEN_WIDTH-6, hud_tile_y, FONT_TILES_START + 1);
+}
+
 // draws a number on screen
 // @param x X coordinate in tiles of where to start
 // @param y Y coordinate in tiles of where to start
@@ -101,7 +113,7 @@ void init_hud(void){
 // @param layer 0: background, 1: window
 //
 // it does NOT call move_win even if layer is set to 1
-void draw_number(uint8_t x, uint8_t y, uint16_t n, uint8_t layer){
+static void draw_number(uint8_t x, uint8_t y, uint16_t n, uint8_t layer){
   uint8_t buffer[5] = {0}; // uint16_t holds up to 65535
   // get digits from number
   uint16_t int_part = n;

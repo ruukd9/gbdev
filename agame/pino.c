@@ -2,10 +2,12 @@
 #include <gb/cgb.h>
 #include <gb/metasprites.h>
 
+#include "res/sprites/Pino.h"
+
+#include "res/bg/map/EmptyBlock.h"
+
 #include "map.h"
 #include "pino.h"
-
-#include "res/sprites/Pino.h"
 
 /* local defs */
 // sprite number
@@ -20,6 +22,7 @@
 static uint8_t is_pino_ok(void);
 static void set_idle(void);
 static void set_jumping(void);
+static void set_moved(void);
 
 // palette stuff
 const uint8_t PINO_PAL = OAMF_CGB_PAL0;
@@ -55,6 +58,7 @@ const uint8_t jumping_curve_map[] = {
 };
 
 uint16_t pino_score;
+uint16_t pino_fishes;
 
 // detect button presses
 uint8_t current_btn;
@@ -79,7 +83,7 @@ void draw_pino(void){
         // traveled a block -> go back to idle + update block pos
         set_idle();
         pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
-        pino_score++;
+        set_moved();
       }
 
       break;
@@ -132,6 +136,27 @@ static void set_jumping(void){
   pino_current_sprite = PINO_JUMPING;
   pino_frame_counter = 0;
 }
+// stuff to do after a successful move
+static void set_moved(void){
+  pino_score++;
+  uint8_t pino_world_height = current_map_height[pino_block_x_position]; // the block on which he stands
+  uint8_t lookup_index = (pino_world_height+1)*MAP_COLS + pino_block_x_position;
+  if(current_map_state[lookup_index] == FISH){
+    // eat the fish
+    // ... maybe some "nom" sprite appears here?
+    // block becomes empty -> update map/state
+    set_bkg_based_tiles(
+      pino_block_x_position*BLOCK_WIDTH_TILES,
+      STARING_TILE_BLOCK_Y - (pino_world_height*STEP_HEIGHT) - BLOCK_HEIGHT_TILES,
+      BLOCK_WIDTH_TILES,
+      BLOCK_HEIGHT_TILES,
+      EmptyBlock,
+      MAP_TILES_START
+    );
+    current_map_state[lookup_index] = EMPTY;
+    pino_fishes++;
+  }
+}
 
 // checks whether pino is OK
 // @returns 1 if yes, 0 if no
@@ -162,6 +187,7 @@ void init_pino(void){
   set_idle();
   // init score
   pino_score = 0;
+  pino_fishes = 0;
 }
 
 // handles pino's state (movement, position, state ecc)

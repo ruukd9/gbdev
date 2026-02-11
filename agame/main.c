@@ -55,7 +55,7 @@ static void game_loop(void){
 
     // we make sure to draw the HUD AFTER the sea has rendered
     // fixed at the bottom of the view -> offset for window = display_height - current_level
-    draw_number(0, DEVICE_SCREEN_HEIGHT-1 - current_sea_y_tile, pino_score, 1);
+    draw_hud();
 
     /* UPDATE STATE */
     pino_state = update_pino();
