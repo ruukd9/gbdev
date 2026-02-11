@@ -122,7 +122,7 @@ static uint8_t generate_column_for(uint8_t target_x_tile, uint8_t previous_col_w
 // also initializes sea level/state
 void init_map(void){
   /* sea level */
-  // sea needs to move separately and be above the bkg
+  // set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
   current_sea_y_tile = DEVICE_SCREEN_HEIGHT-1;
   sea_frame_count = 0;
 
@@ -138,8 +138,12 @@ void init_map(void){
 // draws sea at its current level (tile)
 void draw_sea(void){
   if(last_sea_y_tile != current_sea_y_tile){
-    set_win_based_tiles(0, 0, SeaMapWidth, SeaMapHeight, SeaMap, MAP_TILES_START);
+    // sea needs to move separately and be above the bkg
+    // 1. move it to the correct position
     move_win(7, current_sea_y_tile*8);
+    // 2. paint over the rows above the last one
+    // this is so we overwrite the previous sea/window height HUD which would otherwise show after move_win
+    set_win_based_tiles(0, 0, DEVICE_SCREEN_WIDTH, DEVICE_SCREEN_HEIGHT - current_sea_y_tile, SeaMap, MAP_TILES_START);
     last_sea_y_tile = current_sea_y_tile;
     SHOW_WIN;
   }

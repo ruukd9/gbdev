@@ -13,7 +13,7 @@
 
 /* local defs */
 // tile offsets in VRAM
-#define TITLE_TILES_START 0x20
+#define TITLE_TILES_START 0x30
 #define FONT_TILES_START  0x16
 // how many frames to idle animations for (aka animate every N)
 #define IDLE_TITLE_FRAMES 45
@@ -89,9 +89,9 @@ void show_endscreen(void){
   waitpadup();
 }
 
-// loads font number tiles to VRAM
-void init_numbers_font(void){
-  set_bkg_data(FONT_TILES_START, 10, ScoreTiles);
+// loads font tiles for scoring/HUD to VRAM
+void init_hud(void){
+  set_bkg_data(FONT_TILES_START, 12, ScoreTiles);
 }
 
 // draws a number on screen
@@ -99,6 +99,8 @@ void init_numbers_font(void){
 // @param y Y coordinate in tiles of where to start
 // @param n the number to write
 // @param layer 0: background, 1: window
+//
+// it does NOT call move_win even if layer is set to 1
 void draw_number(uint8_t x, uint8_t y, uint16_t n, uint8_t layer){
   uint8_t buffer[5] = {0}; // uint16_t holds up to 65535
   // get digits from number
@@ -114,15 +116,15 @@ void draw_number(uint8_t x, uint8_t y, uint16_t n, uint8_t layer){
 
   unsigned char current_digit;
   for(uint8_t cursor=0; cursor<5; cursor++){
-    // 0-9 is  the actual digit to draw, which is equal to tile index in VRAM (provided the correct start)
+    // 0-9 is the actual digit to draw, we offset it to account TILE_START + extra characters (2) in the tileset
     current_digit = buffer[cursor];
     if(layer == 1){
       // win
-      set_win_tile_xy(x + cursor, DEVICE_SCREEN_HEIGHT-1 - current_sea_y_tile, FONT_TILES_START + current_digit);
+      set_win_tile_xy(x + cursor, y, FONT_TILES_START + 2 + current_digit);
       SHOW_WIN;
     }else{
       // bkg
-      set_bkg_tile_xy(x + cursor, y, FONT_TILES_START + current_digit);
+      set_bkg_tile_xy(x + cursor, y, FONT_TILES_START + 2 + current_digit);
       SHOW_BKG;
     }
   }
