@@ -44,9 +44,6 @@ static void game_loop(void){
   init_map();
   init_pino();
   init_hud();
-  // init score
-  // will always increase by (BLOCK_WIDTH_PX/SCROLL_SPEED) every time a jump is successful
-  uint16_t score = 0;
 
   int8_t pino_state;
 
@@ -58,13 +55,12 @@ static void game_loop(void){
 
     // we make sure to draw the HUD AFTER the sea has rendered
     // fixed at the bottom of the view -> offset for window = display_height - current_level
-    draw_number(0, DEVICE_SCREEN_HEIGHT-1 - current_sea_y_tile, (score*SCROLL_SPEED)/BLOCK_WIDTH_PX, 1);
+    draw_number(0, DEVICE_SCREEN_HEIGHT-1 - current_sea_y_tile, pino_score, 1);
 
     /* UPDATE STATE */
     pino_state = update_pino();
     update_sea(pino_state); // idle = goes UP, jumping = goes DOWN
     if(pino_state == KO) break;
-    if(pino_state == JUMPING) score++;
 
     vsync(); // await frame
   }

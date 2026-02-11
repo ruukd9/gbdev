@@ -54,6 +54,8 @@ const uint8_t jumping_curve_map[] = {
   24, 20, 20, 18, 16, 12, 10, 8
 };
 
+uint16_t pino_score;
+
 // detect button presses
 uint8_t current_btn;
 uint8_t last_btn;
@@ -77,6 +79,7 @@ void draw_pino(void){
         // traveled a block -> go back to idle + update block pos
         set_idle();
         pino_block_x_position = (pino_block_x_position+1) < MAP_COLS ? (pino_block_x_position+1) : 0;
+        pino_score++;
       }
 
       break;
@@ -157,6 +160,8 @@ void init_pino(void){
   pino_block_x_position = 1;
   // init state
   set_idle();
+  // init score
+  pino_score = 0;
 }
 
 // handles pino's state (movement, position, state ecc)

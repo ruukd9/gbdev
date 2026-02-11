@@ -10,6 +10,8 @@
 
 extern const palette_color_t Pino_palette[4];
 
+extern uint16_t pino_score;
+
 void init_pino(void);
 int8_t update_pino(void);
 void draw_pino(void);
