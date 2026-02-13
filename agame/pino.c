@@ -18,6 +18,9 @@
 #define PINO_IDLE_0    0
 #define PINO_IDLE_1   16
 #define PINO_JUMPING  32
+#define PINO_DUCKING  48
+
+#define PINO_STARTING_BLOCK 1
 
 static uint8_t is_pino_ok(void);
 static void set_idle(void);
@@ -66,6 +69,8 @@ uint8_t last_btn;
 
 // draws pino at his currently saved xy position in his current state (IDLE/JUMPING)
 void draw_pino(void){
+  SPRITES_8x16; SHOW_SPRITES;
+
   // in case we need to adjust the position during jump
   uint8_t pino_x_jump_offset = 0;
   uint8_t pino_y_jump_offset = 0;
@@ -86,6 +91,9 @@ void draw_pino(void){
         set_moved();
       }
 
+      break;
+    case DUCKING:
+      // nothing special?
       break;
     case IDLE:
     default:
@@ -136,6 +144,12 @@ static void set_jumping(void){
   pino_current_sprite = PINO_JUMPING;
   pino_frame_counter = 0;
 }
+// sets current state/frame as DUCKING
+static void set_ducking(void){
+  pino_current_state = DUCKING;
+  pino_current_sprite = PINO_DUCKING;
+  pino_frame_counter = 0;
+}
 // stuff to do after a successful move
 static void set_moved(void){
   pino_score++;
@@ -143,7 +157,6 @@ static void set_moved(void){
   uint8_t lookup_index = (pino_world_height+1)*MAP_COLS + pino_block_x_position;
   if(current_map_state[lookup_index] == FISH){
     // eat the fish
-    // ... maybe some "nom" sprite appears here?
     // block becomes empty -> update map/state
     set_bkg_based_tiles(
       pino_block_x_position*BLOCK_WIDTH_TILES,
@@ -153,6 +166,7 @@ static void set_moved(void){
       EmptyBlock,
       MAP_TILES_START
     );
+    // ... maybe some "nom" sprite appears here?
     current_map_state[lookup_index] = EMPTY;
     pino_fishes++;
   }
@@ -177,12 +191,10 @@ static uint8_t is_pino_ok(void){
 /**************************************/
 // sets sprite data + initial state
 void init_pino(void){
-  SPRITES_8x16; SHOW_SPRITES;
-
-  set_sprite_data(0, 48, Pino);
+  set_sprite_data(0, 64, Pino);
 
   // init starting position
-  pino_block_x_position = 1;
+  pino_block_x_position = PINO_STARTING_BLOCK;
   // init state
   set_idle();
   // init score
@@ -194,12 +206,16 @@ void init_pino(void){
 // @returns current pino state (JUMPING/IDLE/KO)
 int8_t update_pino(void){
   if(!is_pino_ok()) return KO;
+  // if hes jumping hes not doing anything else
+  if(pino_current_state == JUMPING) return JUMPING;
 
   // poll joypad status
   last_btn = current_btn;
   current_btn = joypad();
-
-  if(pino_current_state != JUMPING && (current_btn ^ last_btn) && (current_btn & J_A)) set_jumping();
+  // apply changes if needed
+  if      (current_btn & J_B)                               { set_ducking();  }
+  else if ((current_btn & J_A) && (current_btn ^ last_btn)) { set_jumping();  }
+  else if (last_btn & J_B)                                  { set_idle();     }
 
   return pino_current_state;
 }

@@ -162,6 +162,7 @@ void update_sea(int8_t pino_state){
       }
       sea_motion = SEA_DOWN;
       break;
+    case DUCKING:
     case IDLE:
       sea_motion = SEA_UP;
       sea_frame_count++;

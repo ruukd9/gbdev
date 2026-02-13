@@ -7,6 +7,7 @@
 #define KO     -1
 #define IDLE    0
 #define JUMPING 1
+#define DUCKING 2
 
 extern const palette_color_t Pino_palette[4];
 
